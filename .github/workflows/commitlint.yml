@@ -1,11 +1,6 @@
 name: Lint commit messages
 
-on:
-  pull_request:
-    branches-ignore:
-      - 'master'
-      - 'beta'
-      - 'production'
+on: [pull_request]
 
 jobs:
   commitlint:
