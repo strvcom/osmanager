@@ -1,31 +1,28 @@
-FROM python:3.8.12-buster as python-base
-MAINTAINER STRV DS Department
+# This configuration is inspired by: https://luis-sena.medium.com/creating-the-perfect-python-dockerfile-51bdec41f1c8
+# using ubuntu LTS latest version
+FROM ubuntu:22.04
 
-RUN apt-get --allow-releaseinfo-change update && apt-get install -y unixodbc-dev
+# avoid stuck build due to user prompt
+ARG DEBIAN_FRONTEND=noninteractive
 
-FROM python-base as venv-image
+WORKDIR /project
 
-RUN apt-get install -y build-essential g++ tk python-tk python3-tk tk-dev
+# install the prerequisite for adding custom PPAs and add one with python3.9
+RUN apt update
+RUN apt install --no-install-recommends -y software-properties-common gpg-agent
+RUN add-apt-repository -y ppa:deadsnakes/ppa
 
+# install all system libraries to build binaries and packages, create python env and connect to pg database
+RUN apt install --no-install-recommends -y python3.9 python3.9-dev python3.9-venv python3-pip python3-wheel build-essential openssl libssl-dev git libpq-dev
+
+# create and activate virtual environment using final folder name to avoid path issues with packages
+RUN python3.9 -m venv /project/venv
+ENV PATH="/project/venv/bin:$PATH"
+
+# install requirements
 COPY requirements.txt .
+RUN pip install --no-cache-dir wheel
+RUN pip install --no-cache-dir -r requirements.txt
 
-ENV VIRTUAL_ENV=/opt/venv
-RUN python3 -m venv $VIRTUAL_ENV
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-
-RUN python3 -m pip install --upgrade pip
-RUN pip install -r requirements.txt
-
-FROM python-base AS app-image
-
-COPY --from=venv-image /opt/venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
-
-WORKDIR /usr/src/app
-
-RUN chown -R nobody /usr/src/app/
-RUN usermod --home /tmp nobody
-
-USER nobody
-
-ENV PYTHONPATH=/usr/src/app
+# make sure all messages always reach console
+ENV PYTHONUNBUFFERED=1
