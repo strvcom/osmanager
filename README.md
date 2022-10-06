@@ -12,6 +12,7 @@ work with OpenSearch.
     - [Local environment setup](#local-env-setup)
     - [Versioning](#versioning)
     - [Contributers](#contributors)
+- [Specs](#specs)
 
 ## <a name="installation">:computer: Installation</a>
 
@@ -52,13 +53,13 @@ You can also delete the environment as following: `rm -r ./venv/`
 - [Jaroslav Bezdek](https://www.github.com/jardabezdek)
 - [Niek Mereu](https://github.com/niekstrv)
 
-### Specs
+### <a name="specs">:books: Specs</a>
 
 #### Requirements
 
 ##### Library
 
-The goal is to extend opensearch-py library features that we found useful.
+The goal is to extend [opensearch-py library](https://pypi.org/project/opensearch-py/) features that we found useful.
 
 - Connect to opensearch using url (user/pass) or service account
 - Upload & remove search template
@@ -88,40 +89,6 @@ The goal is to allow teams manage opensearch instances easily with templated pro
 - **Nice to have** lint template?
   - vscode default json linter fails to lint template due to parameters syntax: {{#bla}}
 
-#### Tasks Draft
+#### Tasks
 
-##### Library
-
-- EPIC Python Library setup
-  - Modules structure setup for given requirements
-  - Connect to opensearch using both methods, spec in yaml file
-- EPIC Search template management
-  - Upload & remove search template
-  - Have json file with template source element
-      - Create sample json structure
-  - Check local file vs opensearch file and show differences
-      - search template
-  - Debug search template with sample parameters to see if all work
-- EPIC Function management
-  - Upload & remove function
-  - Check local file vs opensearch file and show differences
-      - function
-  - Have json file with template source element
-      - Create sample json structure
-  - Debug function with sample parameters to see if all work
-- EPIC Index mapping management
-  - Create & drop index with mapping
-  - Check local file vs opensearch file and show differences
-      - index mapping
-  - Have json file with mapping
-      - Create sample json structure
-  - Debug index with sample doc with given data types
-
-##### Application
-
-- EPIC Project init = Project is realworld application of library
-  - Initiate project
-      - create all yaml files: project, files?, parameters
-- EPIC Bring multiple environments
-  - Define several connections
-  - Split files/parameters yamls for each env
+Tasks are kept in github project [Osman](https://github.com/orgs/strvcom/projects/14/views/2)
