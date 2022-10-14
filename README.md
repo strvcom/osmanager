@@ -22,6 +22,16 @@ work with OpenSearch.
 
 ### <a name="local-env-setup">:wrench: Local environment setup</a>
 
+#### Local Open Search instance
+Run:
+`make run-opensearch`
+This will run OpenSearch instance on port 9200 and OpenSearch Dashboards on port 5601 as described
+in [docker-compose-opensearch.yml](docker-compose-opensearch.yml). In case of running docker
+on localhost you can browse the Dashboards on [http://localhost:5061](http://localhost:5061) .
+
+`make clean-all`
+Deletes all docker containers matching name `opensearch` and docker volume `opensearch-data1`.
+
 #### Docker
 
 1. Launch the docker daemon.
