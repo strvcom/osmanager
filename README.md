@@ -22,22 +22,27 @@ work with OpenSearch.
 
 ### <a name="local-env-setup">:wrench: Local environment setup</a>
 
-#### Local Open Search instance
-Run:
-`make run-opensearch`
-This will run OpenSearch instance on port 9200 and OpenSearch Dashboards on port 5601 as described
-in [docker-compose-opensearch.yml](docker-compose-opensearch.yml). In case of running docker
-on localhost you can browse the Dashboards on [http://localhost:5061](http://localhost:5061) .
+Launch the docker daemon in advance of the following steps.
 
-`make clean-all`
-Deletes all docker containers matching name `opensearch` and docker volume `opensearch-data1`.
+The following assumes that
+#### Local OpenSearch instance
+1. `make help` shows a brief description of possible targets.
+1. Run `make docker-run-opensearch` to launch OpenSearch instance
+on port 9200 and OpenSearch Dashboards on port 5601, as described in
+[docker-compose-opensearch.yml](docker-compose-opensearch.yml).
+1. You can browse the Dashboards from the web browser. In case
+of running Docker on localhost you can browse the Dashboards on
+[http://localhost:5061](http://localhost:5061).
+1. All indexed data and dashboards are persistent in a docker volume,
+i.e. when you stop the OpenSearch containers the data are **not** lost.
+In order to clean OpenSearch containers and volumes run
+`make docker-clean-all`, see `make help` for other options.
 
 #### Docker
 
-1. Launch the docker daemon.
-2. Build the docker image with a proper tag:
+1. Build the docker image with a proper tag:
 `docker build -t strv-ds-opensearch-manager:latest .`
-3. Run the docker container:
+1. Run the docker container:
 `docker run -it -p 8888:8888 -v $(pwd)/:/usr/src/app strv-ds-opensearch-manager:latest /bin/bash`
 
 In order to run notebook inside the docker container, use the following command
@@ -47,8 +52,8 @@ In order to run notebook inside the docker container, use the following command
 #### virtualenv
 
 1. Create virtual environment called *venv*: `virtualenv --python=python3.8 venv`
-2. Activate it: `. ./venv/bin/activate`
-3. Install python package: `pip install -e .`
+1. Activate it: `. ./venv/bin/activate`
+1. Install python package: `pip install -e .`
 
 In order to deactivate the environment, run `deactivate` command.
 
@@ -62,6 +67,7 @@ You can also delete the environment as following: `rm -r ./venv/`
 
 - [Jaroslav Bezdek](https://www.github.com/jardabezdek)
 - [Niek Mereu](https://github.com/niekstrv)
+- [Vladimír Kadlec](https://github.com/vladimirkadlec-strv)
 
 ### <a name="specs">:books: Specs</a>
 
