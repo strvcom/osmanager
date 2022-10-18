@@ -166,3 +166,7 @@ cython_debug/
 
 # Vim swap files
 .*.swp
+
+# Node stuff
+package-lock.json
+node_modules/
