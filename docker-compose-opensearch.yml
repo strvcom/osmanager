@@ -1,0 +1,69 @@
+# The following configuration is based on the OpenSearch documentation:
+# https://opensearch.org/docs/latest/opensearch/install/docker/
+version: '3'
+services:
+    opensearch-node:
+        image: opensearchproject/opensearch:2.3.0
+        container_name: opensearch-node
+        environment:
+            cluster.name: opensearch-cluster
+            node.name: opensearch-node
+
+            # along with the memlock settings below, disables swapping
+            bootstrap.memory_lock: "true"
+
+            # minimum and maximum Java heap size, recommend setting both to 50%
+            # of system RAM
+            OPENSEARCH_JAVA_OPTS: "-Xms512m -Xmx512m"
+            
+            # disables execution of install_demo_configuration.sh bundled with
+            # security plugin, which installs demo certificates and security
+            # configurations to OpenSearch
+            DISABLE_INSTALL_DEMO_CONFIG: "true"
+            
+            # disables security plugin entirely in OpenSearch by setting
+            # plugins.security.disabled: true in opensearch.yml
+            DISABLE_SECURITY_PLUGIN: "true"
+            
+            # disables bootstrap checks that are enabled when network.host is
+            # set to a non-loopback address
+            discovery.type: single-node
+        ulimits:
+          memlock:
+            soft: -1
+            hard: -1
+          nofile:
+            # maximum number of open files for the OpenSearch user, set to at
+            # least 65536 on modern systems
+            soft: 65536 
+            hard: 65536
+        volumes:
+            - opensearch-data:/usr/share/opensearch/data
+        ports:
+            - 9200:9200
+
+            # required for Performance Analyzer
+            - 9600:9600
+        networks:
+            - opensearch-net
+
+    opensearch-dashboards:
+        image: opensearchproject/opensearch-dashboards:2.3.0
+        container_name: opensearch-dashboards
+        ports:
+            - 5601:5601
+        expose:
+            - "5601"
+        environment:
+            OPENSEARCH_HOSTS: '["http://opensearch-node:9200"]'
+
+            # disables security dashboards plugin in OpenSearch Dashboards
+            DISABLE_SECURITY_DASHBOARDS_PLUGIN: "true"
+        networks:
+            - opensearch-net
+
+volumes:
+    opensearch-data:
+
+networks:
+    opensearch-net:

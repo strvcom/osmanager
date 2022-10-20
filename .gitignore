@@ -163,3 +163,10 @@ cython_debug/
 #  The .DS_Store file is used to store Finder information about folders.
 #  It is suggested to ignore these files by git.
 *.DS_Store
+
+# Vim swap files
+.*.swp
+
+# Node stuff
+package-lock.json
+node_modules/
