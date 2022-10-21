@@ -35,6 +35,9 @@ help:
 $(RUN_OPENSEARCH):
 	docker-compose up
 
+$(RUN_DEV_ENV):
+	docker-compose run dev-env
+
 $(CLEAN_ALL): $(CLEAN_CONTAINERS) $(CLEAN_VOLUMES)
 
 $(CLEAN_CONTAINERS):
