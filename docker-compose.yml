@@ -3,6 +3,8 @@ services:
     dev-env:
         build: .
         container_name: dev-env
+        volumes:
+            - .:/usr/src/app
         command: [ "/bin/bash" ]
         depends_on:
             - "opensearch-node"
