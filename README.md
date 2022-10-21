@@ -22,28 +22,26 @@ work with OpenSearch.
 
 ### <a name="local-env-setup">:wrench: Local environment setup</a>
 
-Launch the docker daemon in advance of the following steps.
+Launch the docker daemon in advance of the following steps. You can develop the code using
+virtualenv but the local OpenSearch instance requires docker.
 
-The following assumes that
-#### Local OpenSearch instance
-1. `make help` shows a brief description of possible targets.
+#### Local OpenSearch instance and docker development environment
+
+Command `make help` shows a brief description of possible targets. A typical workflow scenario is:
 1. Run `make docker-run-opensearch` to launch OpenSearch instance
 on port 9200 and OpenSearch Dashboards on port 5601, as described in
 [docker-compose-opensearch.yml](docker-compose-opensearch.yml).
-1. You can browse the Dashboards from the web browser. In case
+1. Run `make dev-env` to get a bash shell in the development environment defined
+in [Dockerfile](Dockerfile).
+1. Develop.
+1. Run `make docker-clean-all` to clean unused containers and volumes.
+
+Note the following:
+- You can browse the Dashboards from the web browser. In case
 of running Docker on localhost you can browse the Dashboards on
 [http://localhost:5061](http://localhost:5061).
-1. All indexed data and dashboards are persistent in a docker volume,
+- All indexed data and dashboards are persistent in a docker volume,
 i.e. when you stop the OpenSearch containers the data are **not** lost.
-In order to clean OpenSearch containers and volumes run
-`make docker-clean-all`, see `make help` for other options.
-
-#### Docker
-
-1. Build the docker image with a proper tag:
-`docker build -t strv-ds-opensearch-manager:latest .`
-1. Run the docker container:
-`docker run -it -p 8888:8888 -v $(pwd)/:/usr/src/app strv-ds-opensearch-manager:latest /bin/bash`
 
 In order to run notebook inside the docker container, use the following command
 (and ensure `notebook` is in your dependencies):
