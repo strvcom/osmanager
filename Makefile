@@ -7,8 +7,10 @@ RUN_DEV_ENV = dev-env
 CLEAN_ALL = docker-clean-all
 CLEAN_CONTAINERS = docker-clean-containers
 CLEAN_VOLUMES = docker-clean-volumes
+
 .PHONY: help $(RUN_OPENSEARCH) $(CLEAN_ALL) $(CLEAN_CONTAINERS)
 .PHONY: $(CLEAN_VOLUMES)
+BUILD_DIR = ./build
 
 define HELP_MSG
 Help:
@@ -35,12 +37,24 @@ help:
 $(RUN_OPENSEARCH):
 	docker-compose up
 
-$(RUN_DEV_ENV):
-	docker-compose run dev-env
+# When the Dockerfile changes rebuild the dev image before running
+REBUILD_DEV_TARGET = $(BUILD_DIR)/rebuild-dev-env
+$(RUN_DEV_ENV): $(REBUILD_DEV_TARGET)
+	docker-compose run --rm dev-env
 
+$(REBUILD_DEV_TARGET): $(BUILD_DIR) Dockerfile
+	docker-compose build dev-env
+	touch $(REBUILD_DEV_TARGET)
+
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+# Clean docker containers and volumes
+# TODO clever docker images removal
 $(CLEAN_ALL): $(CLEAN_CONTAINERS) $(CLEAN_VOLUMES)
 
 $(CLEAN_CONTAINERS):
+	rm $(REBUILD_DEV_TARGET)
 	docker-compose rm
 
 $(CLEAN_VOLUMES):

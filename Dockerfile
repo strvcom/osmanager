@@ -1,4 +1,4 @@
-FROM python:3.8.12-buster as python-base
+FROM python:3.8.12-buster AS python-base
 MAINTAINER STRV DS Department
 
 RUN apt-get --allow-releaseinfo-change update && apt-get install -y unixodbc-dev
