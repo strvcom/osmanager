@@ -1,7 +1,24 @@
-# The following configuration is based on the OpenSearch documentation:
-# https://opensearch.org/docs/latest/opensearch/install/docker/
 version: '3'
 services:
+    dev-env:
+        build: .
+        container_name: dev-env
+        volumes:
+            - .:/usr/src/app
+        command: [ "/bin/bash" ]
+        depends_on:
+            - "opensearch-node"
+        ports:
+            - 8888:8888
+        networks:
+            - opensearch-net
+        tty: true
+        stdin_open: true
+        profiles:
+            - dev-env
+
+    # The following configuration is based on the OpenSearch documentation:
+    # https://opensearch.org/docs/latest/opensearch/install/docker/
     opensearch-node:
         image: opensearchproject/opensearch:2.3.0
         container_name: opensearch-node
