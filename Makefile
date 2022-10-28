@@ -14,7 +14,8 @@ BUILD_DIR = ./build
 
 define HELP_MSG
 Help:
-    Typical workflow scenario is:
+    Typical workflow scenario is (see also target descriptions bellow):
+
     1. Open terminal, run 'make ${RUN_OPENSEARCH}' .
     2. Open another terminal, run 'make ${RUN_DEV_ENV}' .
     3. Develop and build some great stuff.
@@ -22,7 +23,7 @@ Help:
 
     For other scenarios, run 'make <target>' where <target> is:
     - '${RUN_OPENSEARCH}' -- run OpenSearch containers.
-    - '${RUN_DEV_ENV}' -- run /bin/bash in develompent environment from Dockerfile.
+    - '${RUN_DEV_ENV}' -- run /bin/bash in a develompent environment from Dockerfile.
     - '$(CLEAN_CONTAINERS)' -- clean docker containers.
     - '$(CLEAN_VOLUMES)' -- clean OpenSearch docker volumes, the containers
        have to be removed first.
@@ -37,14 +38,18 @@ help:
 $(RUN_OPENSEARCH):
 	docker-compose up
 
-# When the Dockerfile changes rebuild the dev image before running
+# When the Dockerfile or .env changes rebuild the dev image before running
 REBUILD_DEV_TARGET = $(BUILD_DIR)/rebuild-dev-env
 $(RUN_DEV_ENV): $(REBUILD_DEV_TARGET)
 	docker-compose run --rm dev-env
 
-$(REBUILD_DEV_TARGET): $(BUILD_DIR) Dockerfile
+$(REBUILD_DEV_TARGET): $(BUILD_DIR) Dockerfile .env
 	docker-compose build dev-env
 	touch $(REBUILD_DEV_TARGET)
+
+# If there is no .env file, create an empty one
+.env:
+	touch .env
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)

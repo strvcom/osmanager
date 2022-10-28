@@ -23,9 +23,18 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 WORKDIR /usr/src/app
 
-RUN chown -R nobody /usr/src/app/
-RUN usermod --home /tmp nobody
+ARG USER_ID
+ARG GROUP_ID
+ARG USERNAME
 
-USER nobody
+RUN if [ ${USER_ID:-0} -ne 0 ] && [ ${GROUP_ID:-0} -ne 0 ] ; then \
+    groupadd -g ${GROUP_ID} ${USERNAME} && \
+    useradd -l -u ${USER_ID} -g ${USERNAME} ${USERNAME} \
+; fi
+
+RUN chown -R "${USERNAME:-nobody}" /usr/src/app/
+RUN usermod --home /tmp "${USERNAME:-nobody}" 
+
+USER "${USERNAME:-nobody}"
 
 ENV PYTHONPATH=/usr/src/app
