@@ -30,7 +30,7 @@ class OsmanConnector:
             awsauth = AWS4Auth(aws_access_key_id, aws_secret_access_key, aws_region, aws_service)
             connection = OpenSearch(
                 hosts = [{'host': host, 'port': 443}],
-                http_auth = self.awsauth,
+                http_auth = awsauth,
                 use_ssl = True,
                 verify_certs = True,
                 connection_class = RequestsHttpConnection
