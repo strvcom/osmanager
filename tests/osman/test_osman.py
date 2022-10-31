@@ -9,5 +9,10 @@ def test_creating_osman_instance():
     - a client with no configuration
     - a client with default configuration
     """
-    Osman()
-    Osman(OsmanConfig())
+    o = Osman()
+    assert(o.config)
+    assert(o.config.host_url)
+    o = Osman(OsmanConfig())
+    assert(o.config)
+    assert(o.config.host_url)
+
