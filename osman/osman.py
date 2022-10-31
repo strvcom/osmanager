@@ -39,7 +39,7 @@ class Osman:
         config: OsmanConfig
             Configuration params (url, ...) of the OpenSearch instance
         """
-        if config is None:
+        if not config:
             logging.info("No config provided, using default one")
             config = OsmanConfig()
 
