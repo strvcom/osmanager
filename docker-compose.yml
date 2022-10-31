@@ -5,8 +5,8 @@ services:
             context: .
             dockerfile: Dockerfile
             args:
-                USER_ID: ${DEV_USER_ID:-0}
-                GROUP_ID: ${DEV_GROUP_ID:-0}
+                USER_ID: ${DEV_USER_ID:-2000}
+                GROUP_ID: ${DEV_GROUP_ID:-2000}
                 USERNAME: "devuser"
         container_name: dev-env
         volumes:

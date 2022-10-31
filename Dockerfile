@@ -23,18 +23,15 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 WORKDIR /usr/src/app
 
-ARG USER_ID
-ARG GROUP_ID
-ARG USERNAME
+ARG USER_ID=2000
+ARG GROUP_ID=2000
+ARG USERNAME=devuser
 
-RUN if [ ${USER_ID:-0} -ne 0 ] && [ ${GROUP_ID:-0} -ne 0 ] ; then \
-    groupadd -g ${GROUP_ID} ${USERNAME} && \
-    useradd -l -u ${USER_ID} -g ${USERNAME} ${USERNAME} \
-; fi
+RUN groupadd -g ${GROUP_ID} ${USERNAME}
+RUN useradd -l -u ${USER_ID} -g ${USERNAME} ${USERNAME}
+RUN chown -R "${USERNAME}" /usr/src/app/
+RUN usermod --home /tmp ${USERNAME} 
 
-RUN chown -R "${USERNAME:-nobody}" /usr/src/app/
-RUN usermod --home /tmp "${USERNAME:-nobody}" 
-
-USER "${USERNAME:-nobody}"
+USER "${USERNAME}"
 
 ENV PYTHONPATH=/usr/src/app
