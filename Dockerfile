@@ -23,9 +23,15 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 WORKDIR /usr/src/app
 
-RUN chown -R nobody /usr/src/app/
-RUN usermod --home /tmp nobody
+ARG USER_ID=2000
+ARG GROUP_ID=2000
+ARG USERNAME=devuser
 
-USER nobody
+RUN groupadd -g ${GROUP_ID} ${USERNAME}
+RUN useradd -l -u ${USER_ID} -g ${USERNAME} ${USERNAME}
+RUN chown -R "${USERNAME}" /usr/src/app/
+RUN usermod --home /tmp ${USERNAME} 
+
+USER "${USERNAME}"
 
 ENV PYTHONPATH=/usr/src/app

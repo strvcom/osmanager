@@ -1,7 +1,13 @@
 version: '3'
 services:
     dev-env:
-        build: .
+        build:
+            context: .
+            dockerfile: Dockerfile
+            args:
+                USER_ID: ${DEV_USER_ID:-2000}
+                GROUP_ID: ${DEV_GROUP_ID:-2000}
+                USERNAME: "devuser"
         container_name: dev-env
         volumes:
             - .:/usr/src/app
@@ -14,6 +20,7 @@ services:
             - opensearch-net
         tty: true
         stdin_open: true
+        # Set a profile, don't run dev-env by default
         profiles:
             - dev-env
 
