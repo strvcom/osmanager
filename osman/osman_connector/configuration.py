@@ -1,5 +1,6 @@
 import os
 
+
 class Configuration:
     OPENSEARCH_HOST = os.environ.get('OPENSEARCH_HOST', None)
     AUTH_METHOD = os.environ.get('AUTH_METHOD', None)

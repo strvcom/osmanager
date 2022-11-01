@@ -3,6 +3,7 @@ import urllib.parse
 from opensearchpy import OpenSearch, RequestsHttpConnection
 from requests_aws4auth import AWS4Auth
 
+
 class OsmanConnector:
     def __init__(
         self, 
@@ -14,7 +15,7 @@ class OsmanConnector:
         auth_method='service',
         aws_user='user',
         aws_secret='secret'
-        ):
+    ):
         self.host = host
         if auth_method == 'user':
             os_creds_user = urllib.parse.quote_plus(f'{aws_user}')
@@ -27,12 +28,13 @@ class OsmanConnector:
                 connection_class=RequestsHttpConnection
             )
         else:
-            awsauth = AWS4Auth(aws_access_key_id, aws_secret_access_key, aws_region, aws_service)
+            awsauth = AWS4Auth(aws_access_key_id, aws_secret_access_key,
+                               aws_region, aws_service)
             connection = OpenSearch(
-                hosts = [{'host': host, 'port': 443}],
-                http_auth = awsauth,
-                use_ssl = True,
-                verify_certs = True,
-                connection_class = RequestsHttpConnection
+                hosts=[{'host': host, 'port': 443}],
+                http_auth=awsauth,
+                use_ssl=True,
+                verify_certs=True,
+                connection_class=RequestsHttpConnection
             )
         self.connection = connection
