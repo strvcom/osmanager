@@ -45,10 +45,11 @@ Note the following:
     DEV_USER_ID=1000
     DEV_GROUP_ID=1000
   ```
-  Substitute 1000 by `user id` and `gid id` id ids of the user on host machine. The ids
-  can be viewed by `id` command.
+  Substitute 1000 by `uid` and `gid` (introduction in
+  [this article](https://www.redhat.com/sysadmin/user-account-gid-uid))
+  of the user on a host machine. The ids can be obtained by running `id` command.
   See [explanation](https://jtreminio.com/blog/running-docker-containers-as-current-host-user/)
-  for details. With Docker under MacOS or Windows you won't need this.
+  for why we do that. With Docker under MacOS or Windows you won't need this.
 
 - You can browse the Dashboards from the web browser. In case
 of running Docker on localhost you can browse the Dashboards on

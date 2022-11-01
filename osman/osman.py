@@ -43,6 +43,7 @@ class Osman:
             logging.info("No config provided, using default one")
             config = OsmanConfig()
 
+        assert(isinstance(config, OsmanConfig))
         self.config = config
 
         logging.info(f"Initializing OpenSearch client with {config.host_url}")
