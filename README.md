@@ -47,6 +47,27 @@ In order to run notebook inside the docker container, use the following command
 (and ensure `notebook` is in your dependencies):
 `jupyter notebook --ip 0.0.0.0 --no-browser --allow-root`
 
+#### Connecting to an OpenSearch cluster
+Two methods are supported to connect to OpenSearch. To connect to OS using user credentials, the following environment variables need to be defined:
+
+| Variable | Standard Value | Note |
+|----------|----------------|------|
+| OPENSEARCH_HOST   | None       | address of remote OS host|
+| AUTH_METHOD | None | `user` for authentication with AWS user credentials |
+| AWS_USER | None       | AWS username   |
+| AWS_SECRET| None| AWS user secret / password  |
+
+To connect to OS using a secret access key, the following environment variables need to be defined:
+
+| Variable | Standard Value | Note |
+|----------|----------------|------|
+| OPENSEARCH_HOST   | None       | address of remote OS host|
+| AUTH_METHOD | None | `secret` for authentication with AWS user credentials |
+| AWS_ACCESS_KEY_ID        | None |     |
+| AWS_SECRET_ACCESS_KEY           | None      |                                                          |
+| AWS_REGION | us-east-1 |         |
+| AWS_SERVICE | es | |
+
 #### virtualenv
 
 1. Create virtual environment called *venv*: `virtualenv --python=python3.8 venv`
