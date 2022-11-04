@@ -181,5 +181,3 @@ class OsmanConfig:
         self.aws_region = aws_region
         self.aws_service = aws_service
         return
-
-

@@ -18,5 +18,3 @@ def test_creating_osman_instance_with_default_config():
     o = Osman(OsmanConfig(host_url="http://opensearch-node:9200"))
     assert o.config
     assert o.config.host_url == "http://opensearch-node:9200"
-
-

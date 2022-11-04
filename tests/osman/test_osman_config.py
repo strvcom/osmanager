@@ -117,7 +117,3 @@ def test_creating_osman_config_auth_method_url_par(_, params, expected):
     for key, val in expected.items():
         assert oc.__dict__[key] == val
         pass
-
-    pass
-
-
