@@ -23,7 +23,7 @@ Help:
 
     For other scenarios, run 'make <target>' where <target> is:
     - '${RUN_OPENSEARCH}' -- run OpenSearch containers.
-    - '${RUN_DEV_ENV}' -- run /bin/bash in a develompent environment from Dockerfile.
+    - '${RUN_DEV_ENV}' -- run /bin/bash in a development environment from Dockerfile.
     - '$(CLEAN_CONTAINERS)' -- clean docker containers.
     - '$(CLEAN_VOLUMES)' -- clean OpenSearch docker volumes, the containers
        have to be removed first.

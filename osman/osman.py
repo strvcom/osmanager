@@ -1,23 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from opensearchpy import OpenSearch
+import os
 import logging
-
-class OsmanConfig:
-    """
-    Configuration holder
-
-    Attributes
-    ----------
-    host_url: str
-        Url of the OpenSearch instance
-    
-    In the future there will be stored additionals attributes like:
-        - user, secrets, aws setup, ...
-    """
-    def __init__(self, host_url="http://opensearch-node:9200"):
-        self.host_url = host_url
+from opensearchpy import OpenSearch
+from .config import OsmanConfig
 
 class Osman:
     """
@@ -30,7 +17,7 @@ class Osman:
     
     """
 
-    def __init__(self, config=None):
+    def __init__(self, config: OsmanConfig=None):
         """
         Init Osman
 
@@ -40,8 +27,8 @@ class Osman:
             Configuration params (url, ...) of the OpenSearch instance
         """
         if not config:
-            logging.info("No config provided, using default one")
-            config = OsmanConfig()
+            logging.info("No config provided, using a default one")
+            config = OsmanConfig(host_url = "http://opensearch-node:9200")
 
         assert(isinstance(config, OsmanConfig))
         self.config = config
