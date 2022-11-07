@@ -136,7 +136,7 @@ def test_creating_osman_config_by_host_url(_:str, host_url:str, expected:dict):
 def test_creating_osman_config_auth_method_url_par(_:str, params:dict, expected:dict):
     """
     Test OsmanConfig for 'url' auth_method initialized by host, port,
-        user, secret parameters
+    user, secret parameters
     """
     oc = OsmanConfig(**params)
     for key, val in expected.items():
