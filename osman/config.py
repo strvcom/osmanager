@@ -9,9 +9,7 @@ from opensearchpy import OpenSearch
 class OsmanConfig:
     """
     Osman configuration holder class
-    """
 
-    """
     Class Attributes
     ----------------
     Class attributes are initialized by the environment variables with
@@ -47,23 +45,23 @@ class OsmanConfig:
         Default: "es"
 
     """
-    OPENSEARCH_HOST = os.environ.get('OPENSEARCH_HOST', None)
-    OPENSEARCH_PORT = os.environ.get('OPENSEARCH_PORT', 443)
-    OPENSEARCH_SSL_ENABLED = os.environ.get('OPENSEARCH_SSL_ENABLED', True)
+    OPENSEARCH_HOST = os.environ.get("OPENSEARCH_HOST", None)
+    OPENSEARCH_PORT = os.environ.get("OPENSEARCH_PORT", 443)
+    OPENSEARCH_SSL_ENABLED = os.environ.get("OPENSEARCH_SSL_ENABLED", True)
 
     # For backward compatibility we allow AWS_USER and AWS_SECRET variables
-    OPENSEARCH_USER = os.environ.get('OPENSEARCH_USER',
-        os.environ.get('AWS_USER', None))
-    OPENSEARCH_SECRET = os.environ.get('OPENSEARCH_SECRET',
-        os.environ.get('AWS_SECRET', None))
+    OPENSEARCH_USER = os.environ.get("OPENSEARCH_USER",
+        os.environ.get("AWS_USER", None))
+    OPENSEARCH_SECRET = os.environ.get("OPENSEARCH_SECRET",
+        os.environ.get("AWS_SECRET", None))
 
-    AUTH_METHOD = os.environ.get('AUTH_METHOD', None)
+    AUTH_METHOD = os.environ.get("AUTH_METHOD", None)
 
-    AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID', None)
-    AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', None)
+    AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID", None)
+    AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY", None)
 
-    AWS_REGION = os.environ.get('AWS_REGION', 'us-east-1')
-    AWS_SERVICE = os.environ.get('AWS_SERVICE', 'es')
+    AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
+    AWS_SERVICE = os.environ.get("AWS_SERVICE", "es")
 
     """
     Instance Attributes
@@ -109,7 +107,24 @@ class OsmanConfig:
 
         Parameters
         ----------
-        see Instance Attributes
+        host_url: str
+            a complete url of the OpenSearch instance, with schema/user/pass
+       
+        For the following attributes description see the class attributes above.
+    
+        opensearch_host: str
+        opensearch_port: int
+        opensearch_ssl_enabled: bool
+        opensearch_user: str
+        opensearch_secret: str
+    
+        auth_method: str
+    
+        aws_access_key_id: str
+        aws_secret_access_key: str
+        aws_region: str
+        aws_service: str
+
         """
 
         # non empty host_url takes precedence over auth_method
@@ -122,15 +137,12 @@ class OsmanConfig:
             parsed_url = urllib.parse.urlparse(host_url)
 
             assert parsed_url.scheme in ["http", "https"]
-            self.opensearch_ssl_enabled = \
-                True if parsed_url.scheme == 'https' else False
+            self.opensearch_ssl_enabled = parsed_url.scheme == "https"
 
             self.opensearch_host = parsed_url.hostname
             if not parsed_url.port:
-                if parsed_url.scheme == "http":
-                    self.opensearch_port = 80
-                else:
-                    self.opensearch_port = 443
+                self.opensearch_port = \
+                    80 if parsed_url.scheme == "http" else 443
             else:
                 self.opensearch_port = parsed_url.port
 
@@ -154,13 +166,13 @@ class OsmanConfig:
             assert opensearch_user
             assert opensearch_secret
             logging.info(f"Using auth_method 'url' and '{opensearch_host}:{opensearch_port}'")
-            os_creds_user = urllib.parse.quote_plus(f'{opensearch_user}')
-            os_creds_pass = urllib.parse.quote_plus(f'{opensearch_secret}')
-            os_scheme = 'https' if opensearch_ssl_enabled else 'http'
+            os_creds_user = urllib.parse.quote_plus(f"{opensearch_user}")
+            os_creds_pass = urllib.parse.quote_plus(f"{opensearch_secret}")
+            os_scheme = "https" if opensearch_ssl_enabled else "http"
 
             self.auth_method = "url"
             self.host_url = \
-              f'{os_scheme}://{os_creds_user}:{os_creds_pass}@{opensearch_host}:{opensearch_port}'
+              f"{os_scheme}://{os_creds_user}:{os_creds_pass}@{opensearch_host}:{opensearch_port}"
 
             self.opensearch_user = opensearch_user
             self.opensearch_secret = opensearch_secret
@@ -169,7 +181,7 @@ class OsmanConfig:
         # AWS auth method
         self.auth_method = "awsauth"
         logging.info(f"Using auth_method 'awsauth' and '{opensearch_host}:{opensearch_port}'")
-        self.host_url = ''
+        self.host_url = ""
 
         assert aws_access_key_id
         assert aws_secret_access_key
