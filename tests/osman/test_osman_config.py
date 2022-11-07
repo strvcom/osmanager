@@ -36,7 +36,7 @@ from osman import OsmanConfig
         }),
     ]
 )
-def test_creating_osman_config_by_host_url(_, host_url, expected):
+def test_creating_osman_config_by_host_url(_:str, host_url:str, expected:dict):
     """
     Test OsmanConfig initialized by host url
     """
@@ -107,7 +107,7 @@ def test_creating_osman_config_by_host_url(_, host_url, expected):
         ),
     ]
 )
-def test_creating_osman_config_auth_method_url_par(_, params, expected):
+def test_creating_osman_config_auth_method_url_par(_:str, params:dict, expected:dict):
     """
     Test OsmanConfig for 'url' auth_method initialized by host, port,
             user, secret parameters

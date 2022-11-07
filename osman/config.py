@@ -88,20 +88,20 @@ class OsmanConfig:
 
     """
     def __init__(self,
-        host_url=None,
+        host_url:str=None,
 
-        opensearch_host=OPENSEARCH_HOST,
-        opensearch_port=OPENSEARCH_PORT,
-        opensearch_ssl_enabled=OPENSEARCH_SSL_ENABLED,
-        opensearch_user=OPENSEARCH_USER,
-        opensearch_secret=OPENSEARCH_SECRET,
+        opensearch_host:str=OPENSEARCH_HOST,
+        opensearch_port:str=OPENSEARCH_PORT,
+        opensearch_ssl_enabled:bool=OPENSEARCH_SSL_ENABLED,
+        opensearch_user:str=OPENSEARCH_USER,
+        opensearch_secret:str=OPENSEARCH_SECRET,
 
-        auth_method=AUTH_METHOD,
+        auth_method:str=AUTH_METHOD,
 
-        aws_access_key_id=AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-        aws_region=AWS_REGION,
-        aws_service=AWS_SERVICE,
+        aws_access_key_id:str=AWS_ACCESS_KEY_ID,
+        aws_secret_access_key:str=AWS_SECRET_ACCESS_KEY,
+        aws_region:str=AWS_REGION,
+        aws_service:str=AWS_SERVICE,
         ):
 
         """
