@@ -3,6 +3,7 @@ MAINTAINER STRV DS Department
 
 RUN apt-get --allow-releaseinfo-change update && apt-get install -y unixodbc-dev
 
+# venv-image
 FROM python-base as venv-image
 
 RUN apt-get install -y build-essential g++ tk python-tk python3-tk tk-dev
@@ -16,7 +17,9 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 RUN python3 -m pip install --upgrade pip
 RUN pip install -r requirements.txt
 
+# app-image
 FROM python-base AS app-image
+RUN apt-get install -y jq
 
 COPY --from=venv-image /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"

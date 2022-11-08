@@ -12,6 +12,21 @@ services:
         volumes:
             - .:/usr/src/app
         command: [ "/bin/bash" ]
+        environment:
+            # Pass the following variables from .env file to the container
+            - OPENSEARCH_HOST
+            - OPENSEARCH_PORT
+            - OPENSEARCH_SSL_ENABLED
+            - OPENSEARCH_USER
+            - OPENSEARCH_SECRET
+            - AUTH_METHOD
+            - AWS_ACCESS_KEY_ID
+            - AWS_SECRET_ACCESS_KEY
+            - AWS_REGION
+            - AWS_SERVICE
+            # For backward compatibility
+            - AWS_USER
+            - AWS_SECRET
         depends_on:
             - "opensearch-node"
         ports:

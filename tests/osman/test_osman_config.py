@@ -63,14 +63,14 @@ def test_creating_osman_config_by_host_url(_:str, host_url:str, expected:dict):
 @parameterized.expand(
     [
         (
-            "test 'url' auth method",
+            "test 'http' auth method",
             {
                 "opensearch_host": "example.com",
                 "opensearch_port": 12345,
                 "opensearch_ssl_enabled": True,
                 "opensearch_user": "user",
                 "opensearch_secret": "secret",
-                "auth_method": "url",
+                "auth_method": "http",
             },
             {
                 "host_url": "https://user:secret@example.com:12345"
@@ -88,7 +88,7 @@ def test_creating_osman_config_by_host_url(_:str, host_url:str, expected:dict):
             },
             {
                 "host_url": "https://user:secret@example.com:12345",
-                "auth_method": "url",
+                "auth_method": "http",
             }
         ),
         (
@@ -106,8 +106,6 @@ def test_creating_osman_config_by_host_url(_:str, host_url:str, expected:dict):
                 "auth_method": "awsauth",
                 "aws_access_key_id": "access_key",
                 "aws_secret_access_key": "secret_key",
-                "aws_region": "us-east-1",
-                "aws_service":"es",
             }
         ),
         (
@@ -135,7 +133,7 @@ def test_creating_osman_config_by_host_url(_:str, host_url:str, expected:dict):
 )
 def test_creating_osman_config_auth_method_url_par(_:str, params:dict, expected:dict):
     """
-    Test OsmanConfig for 'url' auth_method initialized by host, port,
+    Test OsmanConfig for different auth_methods initialized by host, port,
     user, secret parameters
     """
     oc = OsmanConfig(**params)
