@@ -111,6 +111,7 @@ class OsmanConfig:
             a complete url of the OpenSearch instance, with schema/user/pass
        
         For the following attributes description see the class attributes above.
+        NOTE: You have to provide either 'host_url' or 'auth_method' with aditional params
     
         opensearch_host: str
         opensearch_port: int
@@ -162,13 +163,17 @@ class OsmanConfig:
 
         if auth_method in ["http", "user"]:
             self.auth_method = "http"
-            assert opensearch_user
-            assert opensearch_secret
             logging.info(f"Using auth_method 'http' and "
                 f"{opensearch_host}:{opensearch_port}'")
+
+            os_scheme = "https" if opensearch_ssl_enabled else "http"
+            if not opensearch_user:
+                self.host_url = f"{os_scheme}://{opensearch_host}:{opensearch_port}"
+                return
+
+            assert opensearch_secret
             os_creds_user = urllib.parse.quote_plus(f"{opensearch_user}")
             os_creds_pass = urllib.parse.quote_plus(f"{opensearch_secret}")
-            os_scheme = "https" if opensearch_ssl_enabled else "http"
 
             self.host_url = \
               f"{os_scheme}://{os_creds_user}:{os_creds_pass}"\
