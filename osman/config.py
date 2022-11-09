@@ -164,7 +164,7 @@ class OsmanConfig:
         if auth_method in ["http", "user"]:
             self.auth_method = "http"
             logging.info(f"Using auth_method 'http' and "
-                f"{opensearch_host}:{opensearch_port}'")
+                f"'{opensearch_host}:{opensearch_port}'")
 
             os_scheme = "https" if opensearch_ssl_enabled else "http"
             if not opensearch_user:
