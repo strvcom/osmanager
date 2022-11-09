@@ -43,7 +43,7 @@ def test_creating_osman_instance_with_default_config():
 )])
 def test_connection_to_local_opensearch(_, local_config: dict):
     """
-    Test connectig Osman to a local Opensearch instance
+    Test connection to a local Opensearch instance
     """
     o = Osman(OsmanConfig(**local_config))
     assert o.config
