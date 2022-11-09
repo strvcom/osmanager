@@ -29,7 +29,7 @@ class OsmanConfig:
         is also read
 
     AUTH_METHOD: str
-        "url" -- use standard uri/url scheme for OpenSearch host
+        "http" -- use standard uri/url scheme for OpenSearch host
         "user" -- the same as "url", for backward compatibility
         "awsauth" -- use aws4auth for http_auth, the connection parameters
              are read from the following AWS_* attributes
@@ -111,6 +111,7 @@ class OsmanConfig:
             a complete url of the OpenSearch instance, with schema/user/pass
        
         For the following attributes description see the class attributes above.
+        NOTE: You have to provide either 'host_url' or 'auth_method' with aditional params
     
         opensearch_host: str
         opensearch_port: int
@@ -129,10 +130,9 @@ class OsmanConfig:
 
         # non empty host_url takes precedence over auth_method
         if host_url:
-            assert not auth_method or (auth_method in ["url", "user"])
             logging.info(f"Using host_url: '{host_url}'")
             self.host_url = host_url
-            self.auth_method = "url"
+            self.auth_method = "http"
 
             parsed_url = urllib.parse.urlparse(host_url)
 
@@ -151,7 +151,7 @@ class OsmanConfig:
             # All other parameters are ignored
             return
         
-        assert auth_method in ["url", "user", "awsauth"]
+        assert auth_method in ["http", "user", "awsauth"]
 
         assert opensearch_host
         assert opensearch_port
@@ -161,18 +161,23 @@ class OsmanConfig:
         self.opensearch_port = opensearch_port
         self.opensearch_ssl_enabled = opensearch_ssl_enabled
 
-        if auth_method in ["url", "user"]:
-            self.auth_method = "url"
-            assert opensearch_user
+        if auth_method in ["http", "user"]:
+            self.auth_method = "http"
+            logging.info(f"Using auth_method 'http' and "
+                f"'{opensearch_host}:{opensearch_port}'")
+
+            os_scheme = "https" if opensearch_ssl_enabled else "http"
+            if not opensearch_user:
+                self.host_url = f"{os_scheme}://{opensearch_host}:{opensearch_port}"
+                return
+
             assert opensearch_secret
-            logging.info(f"Using auth_method 'url' and '{opensearch_host}:{opensearch_port}'")
             os_creds_user = urllib.parse.quote_plus(f"{opensearch_user}")
             os_creds_pass = urllib.parse.quote_plus(f"{opensearch_secret}")
-            os_scheme = "https" if opensearch_ssl_enabled else "http"
 
-            self.auth_method = "url"
             self.host_url = \
-              f"{os_scheme}://{os_creds_user}:{os_creds_pass}@{opensearch_host}:{opensearch_port}"
+              f"{os_scheme}://{os_creds_user}:{os_creds_pass}"\
+              f"@{opensearch_host}:{opensearch_port}"
 
             self.opensearch_user = opensearch_user
             self.opensearch_secret = opensearch_secret
