@@ -1,8 +1,20 @@
 import pytest
 import logging
 import os
+from parameterized import parameterized
 
 from osman import Osman, OsmanConfig
+
+class OpenSearchLocalConfig:
+    """
+    Config holder for local OpenSearch instance
+
+    """
+    url = "http://opensearch-node:9200"
+    auth_method = "http"
+    host = "opensearch-node"
+    port = 9200
+    ssl_enabled = False
 
 def test_creating_osman_instance_with_no_config():
     """
@@ -10,27 +22,30 @@ def test_creating_osman_instance_with_no_config():
     """
     o = Osman()
     assert o.config
-    assert o.config.host_url == "http://opensearch-node:9200"
+    assert o.config.host_url == OpenSearchLocalConfig.url
 
 def test_creating_osman_instance_with_default_config():
     """
     Test Osman client with configuration from url
     """
-    o = Osman(OsmanConfig(host_url="http://opensearch-node:9200"))
+    o = Osman(OsmanConfig(host_url=OpenSearchLocalConfig.url))
     assert o.config
-    assert o.config.host_url == "http://opensearch-node:9200"
+    assert o.config.host_url == OpenSearchLocalConfig.url
 
-
-def test_connectig_osman_to_local_opensearch():
+@parameterized.expand([(
+    "test local instance",
+    {
+        "auth_method": OpenSearchLocalConfig.auth_method,
+        "opensearch_host": OpenSearchLocalConfig.host,
+        "opensearch_port": OpenSearchLocalConfig.port,
+        "opensearch_ssl_enabled": OpenSearchLocalConfig.ssl_enabled,
+    }
+)])
+def test_connection_to_local_opensearch(_, local_config: dict):
     """
     Test connectig Osman to a local Opensearch instance
     """
-    o = Osman(OsmanConfig(
-                auth_method="http",
-                opensearch_host="opensearch-node",
-                opensearch_port=9200,
-                opensearch_ssl_enabled=False,
-            ))
+    o = Osman(OsmanConfig(**local_config))
     assert o.config
     assert o.client
 
@@ -38,6 +53,9 @@ def test_connectig_osman_to_opensearch_from_environment_variables():
     """
     Test connectig Osman to Opensearch instance configured by
     environment variables
+
+    NOTE: For the future we will add complex testing of reading environment --
+    i.e. setting the environment during the test setup (pytest fixtures)
     """
     env_auth_method = os.environ.get("AUTH_METHOD")
     logging.info(f"Testing auth method:'{env_auth_method}'")
