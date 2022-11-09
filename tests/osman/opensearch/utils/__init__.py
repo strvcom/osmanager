@@ -5,6 +5,7 @@ import time
 
 from osman import Osman, OsmanConfig
 
+
 def get_ids_from_response(response):
     if 'hits' not in response:
         print('Missing `hits` in response')
@@ -40,7 +41,7 @@ def index_handler(request):
     # Check if there is parameter with index mapping
     try:
         mapping = request.param
-    except:
+    except ValueError:
         mapping = None
 
     # Create new index with `index_name` and optional mapping using the helper

@@ -6,6 +6,7 @@ import logging
 from opensearchpy import OpenSearch
 from .config import OsmanConfig
 
+
 class Osman:
     """
     Generic OpenSearch helper class
@@ -17,7 +18,7 @@ class Osman:
     
     """
 
-    def __init__(self, config: OsmanConfig=None):
+    def __init__(self, config: OsmanConfig = None):
         """
         Init Osman
 
@@ -28,9 +29,9 @@ class Osman:
         """
         if not config:
             logging.info("No config provided, using a default one")
-            config = OsmanConfig(host_url = "http://opensearch-node:9200")
+            config = OsmanConfig(host_url="http://opensearch-node:9200")
 
-        assert(isinstance(config, OsmanConfig))
+        assert isinstance(config, OsmanConfig)
         self.config = config
 
         logging.info(f"Initializing OpenSearch client with {config.host_url}")
@@ -63,8 +64,8 @@ class Osman:
         :return: Dictionary with response
         """
         response = self.client.search(
-            body = search_query,
-            index = index_name
+            body=search_query,
+            index=index_name
         )
         return response
     
@@ -84,21 +85,21 @@ class Osman:
         """
         bulk_data = []
         for doc_id, document in enumerate(data):
-            bulk_data.append({"create": {"_index": index_name, '_id': doc_id}})
+            bulk_data.append({"create": {"_index": index_name, "_id": doc_id}})
             bulk_data.append(document)
 
         logging.info(f"Creating data in index {index_name}...")
         res = self.client.bulk(bulk_data, refresh=refresh)
-        if res['errors'] != False:
+        if res["errors"] is not False:
             logging.error("Creating some data failed")
             logging.debug(f"Result: '{res}'")
             for item in res.get('items', None):
                 logging.error(
-                    "error type: '{error_type}',error reason: '{reason}'".\
-                        format(
-                            error_type=item['create']['error']['type'],
-                            reason=item['create']['error']['reason']
-                        )
+                    "error type: '{error_type}',error reason: '{reason}'". 
+                    format(
+                        error_type=item["create"]["error"]["type"],
+                        reason=item["create"]["error"]["reason"]
+                    )
                 )
     
             raise RuntimeError("Bulk insert failed")

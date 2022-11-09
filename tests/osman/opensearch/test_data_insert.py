@@ -18,7 +18,7 @@ with open(sample_data) as json_file:
 @pytest.mark.parametrize("index_handler", [mapping], indirect=True)
 def test_data_insert(index_handler):
     
-     # Get instance of OpenSearchHelper connected to OpenSearch
+    # Get instance of OpenSearchHelper connected to OpenSearch
     config = OsmanConfig(host_url="http://opensearch-node:9200")
     o = Osman(config)
 
@@ -44,11 +44,9 @@ def test_data_insert(index_handler):
     for document in data:
         id = document["id"]
         os_document = [
-            doc["_source"] for doc in search_results["hits"]["hits"] \
+            doc["_source"] for doc in search_results["hits"]["hits"]
             if doc["_source"]["id"] == id
         ][0]
 
         assert document == os_document
-            
-
 
