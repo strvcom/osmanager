@@ -82,35 +82,68 @@ class Osman:
 
     def create_index(self, index_name: str, index_mapping: dict = {}):
         """
-        Search the index with provided search query
-        :param index_name: The name of the index
-        :param index_mapping: Dictionary containing the index mapping
-        :return: Dictionary with response
+        Creates an index
+
+        Parameters
+        ----------
+        index_name: str
+            The name of the index
+
+        Returns
+        -------
+        dict
+            dictionary with response
         """
         return self.client.indices.create(index_name, body=index_mapping)
 
     def delete_index(self, index_name: str):
         """
-        Search the index with provided search query
-        :param index_name: The name of the index
-        :return: Dictionary with response
+        Deletes an index
+
+        Parameters
+        ----------
+        index_name: str
+            The name of the index
+
+
+        Returns
+        -------
+        dict
+            dictionary with response
         """
         return self.client.indices.delete(index=index_name)
 
     def index_exists(self, index_name: str):
         """
-        Search the index with provided search query
-        :param index_name: The name of the index
-        :return: Dictionary with response
+        Checks whether an index exists.
+
+        Parameters
+        ----------
+        index_name: str
+            The name of the index
+
+        Returns
+        -------
+        dict
+            dictionary with response
         """
         return self.client.indices.exists(index_name)
 
     def search(self, index_name: str, search_query: dict):
         """
         Search the index with provided search query
-        :param index_name: The name of the index
-        :param search_string: Search query as dictionary {'query': {....}}
-        :return: dictionary with response
+
+        Parameters
+        ----------
+        index_name: str
+            The name of the index
+        search_string: dict
+            Search query as dictionary {'query': {....}}
+
+        Returns
+        -------
+        dict
+            dictionary with response
         """
         response = self.client.search(
             body=search_query,
