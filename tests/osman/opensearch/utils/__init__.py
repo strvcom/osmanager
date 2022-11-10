@@ -49,7 +49,8 @@ def index_handler(request):
     config = OsmanConfig(host_url="http://opensearch-node:9200")
     o = Osman(config)
 
-    o.create_index(index_name, mapping)
+    res = o.create_index(index_name, mapping)
+    logging.info(res)
 
     # Return name of the index to the test that is using this fixture
     yield index_name

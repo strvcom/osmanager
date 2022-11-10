@@ -1,9 +1,9 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 import os
+import uuid
 import logging
-from opensearchpy import OpenSearch, RequestsHttpConnection
+import json
+
+from opensearchpy import OpenSearch, RequestsHttpConnection, helpers
 from requests_aws4auth import AWS4Auth
 
 from .config import OsmanConfig
@@ -80,62 +80,61 @@ class Osman:
             logging.error("Getting cluster settings failed.")
             raise
 
-    def create_index(self, index_name: str, index_mapping: dict = {}):
+    def create_index(self, name: str, mapping: dict = {}) -> dict:
         """
         Creates an index
 
         Parameters
         ----------
-        index_name: str
+        name: str
             The name of the index
 
         Returns
         -------
         dict
-            dictionary with response
+            Dictionary with response
         """
-        return self.client.indices.create(index_name, body=index_mapping)
+        return self.client.indices.create(index=name, body=mapping)
 
-    def delete_index(self, index_name: str):
+    def delete_index(self, name: str) -> dict:
         """
         Deletes an index
 
         Parameters
         ----------
-        index_name: str
+        name: str
             The name of the index
-
 
         Returns
         -------
         dict
-            dictionary with response
+            Dictionary with response
         """
-        return self.client.indices.delete(index=index_name)
+        return self.client.indices.delete(index=name)
 
-    def index_exists(self, index_name: str):
+    def index_exists(self, name: str) -> dict:
         """
         Checks whether an index exists.
 
         Parameters
         ----------
-        index_name: str
+        name: str
             The name of the index
 
         Returns
         -------
         dict
-            dictionary with response
+            Dictionary with response
         """
-        return self.client.indices.exists(index_name)
+        return self.client.indices.exists(index=name)
 
-    def search(self, index_name: str, search_query: dict):
+    def search_index(self, name: str, search_query: dict) -> dict:
         """
         Search the index with provided search query
 
         Parameters
         ----------
-        index_name: str
+        name: str
             The name of the index
         search_string: dict
             Search query as dictionary {'query': {....}}
@@ -143,46 +142,62 @@ class Osman:
         Returns
         -------
         dict
-            dictionary with response
+            Dictionary with response
         """
-        response = self.client.search(
-            body=search_query,
-            index=index_name
-        )
-        return response
 
-    def add_data_to_index(self, index_name: str, data: dict, refresh=False):
+        return self.client.search(
+            body=search_query,
+            index=name
+        )
+
+    def _bulk_json_data(self, index: str, documents_file: str):
+
+        with open(documents_file) as json_file:
+             documents = json.load(json_file)
+
+        for doc in documents:
+    
+            # use the yield generator to avoid loading data in memory
+            yield {
+                '_index': index,
+                '_id': uuid.uuid4(),
+                '_source': doc
+            }
+
+    def add_data_to_index(self, name: str, documents_file: str, refresh=False) -> dict:
         """
         Bulk insert data to index.
 
         Parameters
         ----------
-        index_name: str
+        name: str
             Name of the index
         data: json
             Data should have following format: [{document}, {document}, ...]
         refresh: bool
             Should the shards in OS refresh automatically?
             True hurts the cluster performance.
+
+        Returns
+        -------
+        dict
+            Dictionary with response
         """
-        bulk_data = []
-        for doc_id, document in enumerate(data):
-            bulk_data.append({"create": {"_index": index_name, "_id": doc_id}})
-            bulk_data.append(document)
 
-        logging.info(f"Creating data in index {index_name}...")
-        res = self.client.bulk(bulk_data, refresh=refresh)
-        if res["errors"] is not False:
-            logging.error("Creating some data failed.")
-            logging.debug(f"Result: '{res}'.")
-            for item in res.get('items', None):
-                logging.error(
-                    "error type: '{error_type}',error reason: '{reason}.'".
-                    format(
-                        error_type=item["create"]["error"]["type"],
-                        reason=item["create"]["error"]["reason"]
-                    )
-                )
+        logging.info(f"Creating data in index {name}...")
 
+        try: 
+            succes, _ = helpers.bulk(
+                self.client,
+                self._bulk_json_data(name, documents_file), refresh=refresh, stats_only = False
+            )
+        except Exception as e:
+            logging.debug(f"Failed: '{e}'.")
             raise RuntimeError("Bulk insert failed.")
+        
+        res = {
+            'acknowledged': True,
+            "documents_inserted": succes,
+            'index': name
+        }
         return res
