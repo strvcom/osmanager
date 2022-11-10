@@ -8,15 +8,16 @@ from requests_aws4auth import AWS4Auth
 
 from .config import OsmanConfig
 
+
 class Osman:
     """
     Generic OpenSearch helper class
-    
+
     Attributes
     ----------
     client: OpenSearch
         OpenSearch initialized client
-    
+
     """
 
     def __init__(self, config: OsmanConfig = None):
@@ -30,21 +31,25 @@ class Osman:
         """
         if not config:
             logging.info("No config provided, using a default one")
-            config = OsmanConfig(host_url = "http://opensearch-node:9200")
+            config = OsmanConfig(host_url="http://opensearch-node:9200")
 
-        assert(isinstance(config, OsmanConfig))
+        assert isinstance(config, OsmanConfig)
         self.config = config
 
         os_params = {}
         if config.auth_method == "http":
-            logging.info(f"Initializing OpenSearch by 'http' auth method, "
-                f"host:{config.opensearch_host}, port:{config.opensearch_port}")
+            logging.info(
+                f"Initializing OpenSearch by 'http' auth method, "
+                f"host:{config.opensearch_host}, port:{config.opensearch_port}"
+            )
 
             os_params["hosts"] = [config.host_url]
 
         elif config.auth_method == "awsauth":
-            logging.info(f"Initializing OpenSearch by 'awsauth' auth method, "
-                f"host:{config.opensearch_host}, port:{config.opensearch_port}")
+            logging.info(
+                f"Initializing OpenSearch by 'awsauth' auth method, "
+                f"host:{config.opensearch_host}, port:{config.opensearch_port}"
+            )
 
             os_params["http_auth"] = AWS4Auth(
                     config.aws_access_key_id,
@@ -81,7 +86,7 @@ class Osman:
 
     def index_exists(self, index_name: str):
         return self.client.indices.exists(index_name)
-    
+
     def search(self, index_name: str, search_query: dict):
         """
         Search the index with provided search query
@@ -94,7 +99,7 @@ class Osman:
             index=index_name
         )
         return response
-    
+
     def add_data_to_index(self, index_name: str, data: dict, refresh=False):
         """
         Bulk insert data to index.
@@ -106,7 +111,7 @@ class Osman:
         data: json
             Data should have following format: [{document}, {document}, ...]
         refresh: bool
-            Should the shards in OS refresh automatically? 
+            Should the shards in OS refresh automatically?
             True hurts the cluster performance.
         """
         bulk_data = []
@@ -121,12 +126,12 @@ class Osman:
             logging.debug(f"Result: '{res}'")
             for item in res.get('items', None):
                 logging.error(
-                    "error type: '{error_type}',error reason: '{reason}'". 
+                    "error type: '{error_type}',error reason: '{reason}'".
                     format(
                         error_type=item["create"]["error"]["type"],
                         reason=item["create"]["error"]["reason"]
                     )
                 )
-    
+
             raise RuntimeError("Bulk insert failed")
         return res

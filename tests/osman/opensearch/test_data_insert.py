@@ -1,4 +1,4 @@
-import json 
+import json
 import pytest
 
 from osman import Osman, OsmanConfig
@@ -17,7 +17,7 @@ with open(sample_data) as json_file:
 
 @pytest.mark.parametrize("index_handler", [mapping], indirect=True)
 def test_data_insert(index_handler):
-    
+
     # Get instance of OpenSearchHelper connected to OpenSearch
     config = OsmanConfig(host_url="http://opensearch-node:9200")
     o = Osman(config)
@@ -30,15 +30,15 @@ def test_data_insert(index_handler):
     # Check that documents in OS are the same as in json
     input_ids = set([document["id"] for document in data])
 
-    # Obtain documents back from OS and compare their id's to 
+    # Obtain documents back from OS and compare their id's to
     # local
     search_results = o.search(index_name, {})
 
     search_ids = get_ids_from_response(search_results)
 
     ids_difference = input_ids.difference(search_ids)
-    
-    assert len(ids_difference) == 0      
+
+    assert len(ids_difference) == 0
 
     # assert all documents in OS are the same as local
     for document in data:
@@ -49,4 +49,3 @@ def test_data_insert(index_handler):
         ][0]
 
         assert document == os_document
-

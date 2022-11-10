@@ -10,19 +10,19 @@ def get_ids_from_response(response):
     if 'hits' not in response:
         print('Missing `hits` in response')
         return None
-    
+
     if 'hits' not in response['hits']:
         print('Missing `hits` in response["hits"]')
         return None
-    
+
     if len(response['hits']['hits']) == 0:
         print('Empty response')
         return []
-    
+
     if 'id' not in response['hits']['hits'][0]['_source']:
         print('Missing `post_id` in documents')
         return None
-    
+
     return [document['_source']['id'] for document in response['hits']['hits']]
 
 
