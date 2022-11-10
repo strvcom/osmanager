@@ -4,8 +4,8 @@ import pytest
 from osman import Osman, OsmanConfig
 from tests.osman.opensearch.utils import index_handler, get_ids_from_response
 
-index_mapping = "index_mapping.json"
-sample_data = "sample_data.json"
+index_mapping = "tests/osman/opensearch/index_mapping.json"
+sample_data = "tests/osman/opensearch/sample_data.json"
 
 
 with open(index_mapping) as json_file:
