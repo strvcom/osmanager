@@ -150,21 +150,41 @@ class Osman:
             index=name
         )
 
-    def _bulk_json_data(self, index: str, documents_file: str):
+    def _bulk_json_data(self, index_name: str, documents_filepath: str):
+        """
+        Generate data from a json file
 
-        with open(documents_file) as json_file:
-             documents = json.load(json_file)
+        Parameters
+        ----------
+        index_name: str
+            The name of the index to store the data
+        json_file: str
+            Filepath to json with data to insert
+
+        Returns
+        -------
+        dict
+            Dictionary with response
+        """
+
+        with open(documents_filepath) as json_file:
+            documents = json.load(json_file)
 
         for doc in documents:
-    
+
             # use the yield generator to avoid loading data in memory
             yield {
-                '_index': index,
+                '_index': index_name,
                 '_id': uuid.uuid4(),
                 '_source': doc
             }
 
-    def add_data_to_index(self, name: str, documents_file: str, refresh=False) -> dict:
+    def add_data_to_index(
+        self,
+        name: str,
+        documents_file: str,
+        refresh=False
+    ) -> dict:
         """
         Bulk insert data to index.
 
@@ -186,15 +206,17 @@ class Osman:
 
         logging.info(f"Creating data in index {name}...")
 
-        try: 
+        try:
             succes, _ = helpers.bulk(
                 self.client,
-                self._bulk_json_data(name, documents_file), refresh=refresh, stats_only = False
+                self._bulk_json_data(
+                    name, documents_file
+                ), refresh=refresh, stats_only=False
             )
         except Exception as e:
             logging.debug(f"Failed: '{e}'.")
             raise RuntimeError("Bulk insert failed.")
-        
+
         res = {
             'acknowledged': True,
             "documents_inserted": succes,
