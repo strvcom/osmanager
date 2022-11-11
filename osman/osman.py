@@ -29,6 +29,7 @@ class Osman:
         config: OsmanConfig
             Configuration params (url, ...) of the OpenSearch instance
         """
+
         if not config:
             logging.info("No config provided, using a default one.")
             config = OsmanConfig(host_url="http://opensearch-node:9200")
@@ -94,6 +95,7 @@ class Osman:
         dict
             Dictionary with response
         """
+        
         return self.client.indices.create(index=name, body=mapping)
 
     def delete_index(self, name: str) -> dict:
@@ -110,6 +112,7 @@ class Osman:
         dict
             Dictionary with response
         """
+
         return self.client.indices.delete(index=name)
 
     def index_exists(self, name: str) -> dict:
@@ -126,6 +129,7 @@ class Osman:
         dict
             Dictionary with response
         """
+
         return self.client.indices.exists(index=name)
 
     def search_index(self, name: str, search_query: dict) -> dict:
@@ -174,9 +178,9 @@ class Osman:
 
             # use the yield generator to avoid loading data in memory
             yield {
-                '_index': index_name,
-                '_id': uuid.uuid4(),
-                '_source': doc
+                "_index": index_name,
+                "_id": uuid.uuid4(),
+                "_source": doc
             }
 
     def add_data_to_index(
@@ -218,8 +222,8 @@ class Osman:
             raise RuntimeError("Bulk insert failed.")
 
         res = {
-            'acknowledged': True,
+            "acknowledged": True,
             "documents_inserted": succes,
-            'index': name
+            "index": name
         }
         return res
