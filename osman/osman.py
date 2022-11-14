@@ -3,6 +3,7 @@ import uuid
 import logging
 import json
 
+from pathlib import Path
 from opensearchpy import OpenSearch, RequestsHttpConnection, helpers
 from requests_aws4auth import AWS4Auth
 
@@ -31,7 +32,7 @@ class Osman:
         """
 
         if not config:
-            logging.info("No config provided, using a default one.")
+            logging.info("No config provided, using a default one")
             config = OsmanConfig(host_url="http://opensearch-node:9200")
 
         assert isinstance(config, OsmanConfig)
@@ -42,7 +43,7 @@ class Osman:
             logging.info(
                 f"Initializing OpenSearch by 'http' auth method, "
                 f"host:{config.opensearch_host}, \
-                port:{config.opensearch_port}."
+                port:{config.opensearch_port}"
             )
 
             os_params["hosts"] = [config.host_url]
@@ -51,7 +52,7 @@ class Osman:
             logging.info(
                 f"Initializing OpenSearch by 'awsauth' auth method, "
                 f"host:{config.opensearch_host}, \
-                port:{config.opensearch_port}."
+                port:{config.opensearch_port}"
             )
 
             os_params["http_auth"] = AWS4Auth(
@@ -75,10 +76,10 @@ class Osman:
 
         try:
             # Test the connection
-            logging.info("Getting cluster settings.")
+            logging.info("Getting cluster settings")
             self.client.cluster.get_settings()
         except Exception:
-            logging.error("Getting cluster settings failed.")
+            logging.error("Getting cluster settings failed")
             raise
 
     def create_index(self, name: str, mapping: dict = {}) -> dict:
@@ -95,7 +96,7 @@ class Osman:
         dict
             Dictionary with response
         """
-        
+
         return self.client.indices.create(index=name, body=mapping)
 
     def delete_index(self, name: str) -> dict:
@@ -117,7 +118,7 @@ class Osman:
 
     def index_exists(self, name: str) -> dict:
         """
-        Checks whether an index exists.
+        Checks whether an index exists
 
         Parameters
         ----------
@@ -154,7 +155,15 @@ class Osman:
             index=name
         )
 
-    def _bulk_json_data(self, index_name: str, documents_filepath: str):
+    def _get_data_from_file(self, filepath: str) -> list:
+        if isinstance(filepath, str) and (Path(filepath).exists()):
+
+            with open(filepath) as json_file:
+                data = json.load(json_file)
+
+        return data
+
+    def _bulk_json_data(self, index_name: str, documents: list = None):
         """
         Generate data from a json file
 
@@ -162,21 +171,13 @@ class Osman:
         ----------
         index_name: str
             The name of the index to store the data
-        json_file: str
-            Filepath to json with data to insert
+        documents: list
+            Documents should have following format: [{document}, {document}, ...]
 
-        Returns
-        -------
-        dict
-            Dictionary with response
         """
-
-        with open(documents_filepath) as json_file:
-            documents = json.load(json_file)
 
         for doc in documents:
 
-            # use the yield generator to avoid loading data in memory
             yield {
                 "_index": index_name,
                 "_id": uuid.uuid4(),
@@ -186,27 +187,38 @@ class Osman:
     def add_data_to_index(
         self,
         name: str,
-        documents_file: str,
-        refresh=False
+        documents: list = None,
+        documents_filepath: str = None,
+        refresh: bool = False
     ) -> dict:
         """
-        Bulk insert data to index.
+        Bulk insert data to index from dictionary or json filepath
 
         Parameters
         ----------
         name: str
             Name of the index
-        data: json
-            Data should have following format: [{document}, {document}, ...]
+        documents: json
+            Documents should have following format: [{document}, {document}, ...]
+        documents_filepath: str
+            Filepath to load Documents from json
         refresh: bool
             Should the shards in OS refresh automatically?
-            True hurts the cluster performance.
+            True hurts the cluster performance
 
         Returns
         -------
         dict
             Dictionary with response
         """
+        if (documents is None) and (documents_filepath is None):
+            logging.error(
+                "Documents and documents_filepath cannot both be None"
+            )
+            raise ValueError("Failed to add data")
+
+        if documents_filepath:
+            documents = self._get_data_from_file(documents_filepath)
 
         logging.info(f"Creating data in index {name}...")
 
@@ -214,12 +226,12 @@ class Osman:
             succes, _ = helpers.bulk(
                 self.client,
                 self._bulk_json_data(
-                    name, documents_file
+                    index_name=name, documents=documents
                 ), refresh=refresh, stats_only=False
             )
         except Exception as e:
-            logging.debug(f"Failed: '{e}'.")
-            raise RuntimeError("Bulk insert failed.")
+            logging.debug(f"Failed: '{e}'")
+            raise RuntimeError("Bulk insert failed")
 
         res = {
             "acknowledged": True,
