@@ -16,6 +16,7 @@ INDEX_MAPPING = {
       }
     }
   }
+CONFIG = OsmanConfig(host_url="http://opensearch-node:9200")
 
 
 @pytest.mark.parametrize("index_handler", [INDEX_MAPPING], indirect=True)
@@ -30,14 +31,9 @@ INDEX_MAPPING = {
     ]
   ]
 )
-@pytest.mark.parametrize(
-  "documents_filepath",
-  [None, "tests/osman/opensearch/sample_data.json"]
-)
 def test_data_insert(
   index_handler,
-  documents: Union[None, list],
-  documents_filepath: Union[None, str]
+  documents: list
   ):
 
     # Get instance of OpenSearchHelper connected to OpenSearch
@@ -50,14 +46,8 @@ def test_data_insert(
     o.add_data_to_index(
       name=index_name,
       documents=documents,
-      documents_filepath=documents_filepath,
       refresh=True
     )
-
-    # if loaded from disk directly, load in memory to test
-    if documents is None:
-        with open(documents_filepath) as json_file:
-            documents = json.load(json_file)
 
     # Check that documents in OS are the same as in json
     input_ids = set([document["id"] for document in documents])

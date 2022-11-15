@@ -42,8 +42,8 @@ class Osman:
         if config.auth_method == "http":
             logging.info(
                 f"Initializing OpenSearch by 'http' auth method, "
-                f"host:{config.opensearch_host}, \
-                port:{config.opensearch_port}"
+                f"host:{config.opensearch_host}, "
+                f"port:{config.opensearch_port}"
             )
 
             os_params["hosts"] = [config.host_url]
@@ -51,8 +51,8 @@ class Osman:
         elif config.auth_method == "awsauth":
             logging.info(
                 f"Initializing OpenSearch by 'awsauth' auth method, "
-                f"host:{config.opensearch_host}, \
-                port:{config.opensearch_port}"
+                f"host:{config.opensearch_host}, "
+                f"port:{config.opensearch_port}"
             )
 
             os_params["http_auth"] = AWS4Auth(
@@ -155,14 +155,6 @@ class Osman:
             index=name
         )
 
-    def _get_data_from_file(self, filepath: str) -> list:
-        if isinstance(filepath, str) and (Path(filepath).exists()):
-
-            with open(filepath) as json_file:
-                data = json.load(json_file)
-
-        return data
-
     def _bulk_json_data(self, index_name: str, documents: list = None):
         """
         Generate data from a json file
@@ -187,12 +179,11 @@ class Osman:
     def add_data_to_index(
         self,
         name: str,
-        documents: list = None,
-        documents_filepath: str = None,
+        documents: list,
         refresh: bool = False
     ) -> dict:
         """
-        Bulk insert data to index from dictionary or json filepath
+        Bulk insert data to index
 
         Parameters
         ----------
@@ -200,8 +191,6 @@ class Osman:
             Name of the index
         documents: json
             Documents should have following format: [{document}, {document}, ...]
-        documents_filepath: str
-            Filepath to load Documents from json
         refresh: bool
             Should the shards in OS refresh automatically?
             True hurts the cluster performance
@@ -211,14 +200,6 @@ class Osman:
         dict
             Dictionary with response
         """
-        if (documents is None) and (documents_filepath is None):
-            logging.error(
-                "Documents and documents_filepath cannot both be None"
-            )
-            raise ValueError("Failed to add data")
-
-        if documents_filepath:
-            documents = self._get_data_from_file(documents_filepath)
 
         logging.info(f"Creating data in index {name}...")
 

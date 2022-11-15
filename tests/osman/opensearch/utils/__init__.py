@@ -30,7 +30,10 @@ def get_ids_from_response(response):
 
 
 @pytest.fixture
-def index_handler(request, host_url: str = "http://opensearch-node:9200"):
+def index_handler(
+    request,
+    config: OsmanConfig = OsmanConfig(host_url="http://opensearch-node:9200")
+):
     """
     Creates new index, yields index name to test case so it can use it
     and after the test is done deletes the index
@@ -50,7 +53,6 @@ def index_handler(request, host_url: str = "http://opensearch-node:9200"):
         mapping = None
 
     # Create new index with `index_name` and optional mapping using the helper
-    config = OsmanConfig(host_url=host_url)
     o = Osman(config)
 
     res = o.create_index(index_name, mapping)
