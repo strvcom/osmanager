@@ -5,6 +5,7 @@ from parameterized import parameterized
 
 from osman import Osman, OsmanConfig
 
+
 class OpenSearchLocalConfig:
     """
     Config holder for local OpenSearch instance
@@ -16,6 +17,7 @@ class OpenSearchLocalConfig:
     port = 9200
     ssl_enabled = False
 
+
 def test_creating_osman_instance_with_no_config():
     """
     Test Osman client with no configuration
@@ -24,6 +26,7 @@ def test_creating_osman_instance_with_no_config():
     assert o.config
     assert o.config.host_url == OpenSearchLocalConfig.url
 
+
 def test_creating_osman_instance_with_default_config():
     """
     Test Osman client with configuration from url
@@ -31,6 +34,7 @@ def test_creating_osman_instance_with_default_config():
     o = Osman(OsmanConfig(host_url=OpenSearchLocalConfig.url))
     assert o.config
     assert o.config.host_url == OpenSearchLocalConfig.url
+
 
 @parameterized.expand([(
     "test local instance",
@@ -49,6 +53,7 @@ def test_connection_to_local_opensearch(_, local_config: dict):
     assert o.config
     assert o.client
 
+
 def test_connectig_osman_to_opensearch_from_environment_variables():
     """
     Test connectig Osman to Opensearch instance configured by
@@ -61,7 +66,7 @@ def test_connectig_osman_to_opensearch_from_environment_variables():
     logging.info(f"Testing auth method:'{env_auth_method}'")
     if not env_auth_method:
         logging.warning("No auth method provided by the environment,"
-            " passing without testing")
+                        " passing without testing")
         return
     logging.info("Testing Osman initialized by environment variables")
     config = OsmanConfig()
