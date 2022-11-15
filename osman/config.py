@@ -6,6 +6,22 @@ import logging
 import urllib
 from opensearchpy import OpenSearch
 
+"""
+Environment variables used by OsmanConfig
+"""
+OSMAN_ENV_VARS = [
+    "OPENSEARCH_HOST",
+    "OPENSEARCH_PORT",
+    "OPENSEARCH_SSL_ENABLED",
+    "OPENSEARCH_USER",
+    "OPENSEARCH_SECRET",
+    "AUTH_METHOD",
+    "AWS_ACCESS_KEY_ID",
+    "AWS_SECRET_ACCESS_KEY",
+    "AWS_REGION",
+    "AWS_SERVICE",
+]
+
 class OsmanConfig:
     """
     Osman configuration holder class
@@ -46,8 +62,9 @@ class OsmanConfig:
 
     """
     OPENSEARCH_HOST = os.environ.get("OPENSEARCH_HOST", None)
-    OPENSEARCH_PORT = os.environ.get("OPENSEARCH_PORT", 443)
-    OPENSEARCH_SSL_ENABLED = os.environ.get("OPENSEARCH_SSL_ENABLED", True)
+    OPENSEARCH_PORT = int(os.environ.get("OPENSEARCH_PORT", 443))
+    OPENSEARCH_SSL_ENABLED = \
+        os.environ.get("OPENSEARCH_SSL_ENABLED", "True") == "True"
 
     # For backward compatibility we allow AWS_USER and AWS_SECRET variables
     OPENSEARCH_USER = os.environ.get("OPENSEARCH_USER",
@@ -151,10 +168,12 @@ class OsmanConfig:
             # All other parameters are ignored
             return
         
-        assert auth_method in ["http", "user", "awsauth"]
+        assert auth_method in ["http", "user", "awsauth"],\
+            "auth_method wrong or missing"
 
         assert opensearch_host
         assert opensearch_port
+        assert type(opensearch_port) == int
         assert type(opensearch_ssl_enabled) == bool
 
         self.opensearch_host = opensearch_host
@@ -198,3 +217,30 @@ class OsmanConfig:
         self.aws_region = aws_region
         self.aws_service = aws_service
         return
+
+    def _reload_defaults_from_env(self):
+        """
+        Reload default values from environment values, used for testing purposes
+        """
+        logging.info("Reloading OsmanConfig from the environment")
+        for variable in set(OSMAN_ENV_VARS) - \
+                set(["OPENSEARCH_PORT", "OPENSEARCH_SSL_ENABLED"]):
+            self.__dict__[variable] = os.environ.get(
+                variable, self.__class__.__dict__[variable])
+        
+        self.OPENSEARCH_PORT = int(os.environ.get("OPENSEARCH_PORT", 443))
+        self.OPENSEARCH_SSL_ENABLED = \
+            os.environ.get("OPENSEARCH_SSL_ENABLED", "True") == "True"
+
+        # For backward compatibility we allow AWS_USER and AWS_SECRET variables
+        self.OPENSEARCH_USER = os.environ.get("OPENSEARCH_USER",
+            os.environ.get("AWS_USER", self.OPENSEARCH_USER))
+        self.OPENSEARCH_SECRET = os.environ.get("OPENSEARCH_SECRET",
+            os.environ.get("AWS_SECRET", self.OPENSEARCH_SECRET))
+
+        init_params = {
+            variable.lower(): self.__dict__[variable]
+            for variable in OSMAN_ENV_VARS
+        }
+
+        self.__init__(**init_params)
