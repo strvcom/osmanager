@@ -1,23 +1,19 @@
+"""
+Tests initialization and setup
+"""
 import logging
 import os
+import sys
 import pytest
 
-# NOTE: We can't import osman.config here, the import would
-#       initialize OsmanConfig class
-OSMAN_ENV_VARS = [
-    "OPENSEARCH_HOST",
-    "OPENSEARCH_PORT",
-    "OPENSEARCH_SSL_ENABLED",
-    "OPENSEARCH_USER",
-    "OPENSEARCH_SECRET",
-    "AWS_USER",
-    "AWS_SECRET",
-    "AUTH_METHOD",
-    "AWS_ACCESS_KEY_ID",
-    "AWS_SECRET_ACCESS_KEY",
-    "AWS_REGION",
-    "AWS_SERVICE",
-]
+# This ugly hack allows importing 'osman.environment' without initializing
+# osman package (i.e. without executing osman/__init__.py)
+# We need to prevent initializing OsmanConfig class
+ORIG_SYS_PATH=sys.path.copy()
+sys.path.append(os.path.join(".", "osman"))
+from environment import OSMAN_ENVIRONMENT_VARS
+sys.path = ORIG_SYS_PATH
+
 # Dictionary to save deleted environment variables
 OSMAN_ENV_VARS_SAVED = {}
 def pytest_configure():
@@ -31,7 +27,7 @@ def save_and_delete_osman_environment_vars():
     Delete Osman's variables from the environment.
     """
     logging.info("Deleting Osman environment variables")
-    for variable in OSMAN_ENV_VARS:
+    for variable in OSMAN_ENVIRONMENT_VARS + ["AWS_USER", "AWS_SECRET"]:
         if os.environ.get(variable, None) == None:
             continue
         OSMAN_ENV_VARS_SAVED[variable] = os.environ.pop(variable)

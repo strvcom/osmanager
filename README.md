@@ -71,10 +71,11 @@ In order to deactivate the environment, run `deactivate` command.
 
 You can also delete the environment as following: `rm -r ./venv/`
 
-### Testing 
+### <a name="testing">:traffic_light: Testing 
 Run `pytest` in your devel environment to run all tests.
 
 The `OsmanConfig` class can be initialized from the environment by the following variables:
+
 | Variable | Default value | Type| Description |
 |----------|---------------|-----|-------------|
 | AUTH_METHOD             | `http` | string |`http` for username/password authentication, <br />`awsauth`for authentication with AWS user credentials |
@@ -89,7 +90,7 @@ The `OsmanConfig` class can be initialized from the environment by the following
 | AWS_SERVICE             | `es` | string | AWS service for `awsauth` AUTH_METHOD|
 
 You can add these variables to your `.env` file, `make dev-env` will pass
-them to the devel Docker immage. There is a test in [tests/osman/test_osman.py] creating `Osman` instance
+them to the devel Docker image. There is a test in [test_osman.py](tests/osman/test_osman.py) creating `Osman` instance
 using environment variables so you can use any OpenSearch instance for testing.
 
 ### <a name="versioning">:heavy_plus_sign: Versioning</a>

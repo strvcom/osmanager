@@ -1,26 +1,11 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
+"""
+Osman configuration module
+"""
 import os
 import logging
 import urllib
 from opensearchpy import OpenSearch
-
-"""
-Environment variables used by OsmanConfig
-"""
-OSMAN_ENV_VARS = [
-    "OPENSEARCH_HOST",
-    "OPENSEARCH_PORT",
-    "OPENSEARCH_SSL_ENABLED",
-    "OPENSEARCH_USER",
-    "OPENSEARCH_SECRET",
-    "AUTH_METHOD",
-    "AWS_ACCESS_KEY_ID",
-    "AWS_SECRET_ACCESS_KEY",
-    "AWS_REGION",
-    "AWS_SERVICE",
-]
+from .environment import OSMAN_ENVIRONMENT_VARS
 
 class OsmanConfig:
     """
@@ -167,7 +152,7 @@ class OsmanConfig:
             self.opensearch_secret = parsed_url.password
             # All other parameters are ignored
             return
-        
+
         assert auth_method in ["http", "user", "awsauth"],\
             "auth_method wrong or missing"
 
@@ -223,11 +208,12 @@ class OsmanConfig:
         Reload default values from environment values, used for testing purposes
         """
         logging.info("Reloading OsmanConfig from the environment")
-        for variable in set(OSMAN_ENV_VARS) - \
-                set(["OPENSEARCH_PORT", "OPENSEARCH_SSL_ENABLED"]):
+        for variable in OSMAN_ENVIRONMENT_VARS:
+            if variable in ["OPENSEARCH_PORT", "OPENSEARCH_SSL_ENABLED"]:
+                continue
             self.__dict__[variable] = os.environ.get(
                 variable, self.__class__.__dict__[variable])
-        
+
         self.OPENSEARCH_PORT = int(os.environ.get("OPENSEARCH_PORT", 443))
         self.OPENSEARCH_SSL_ENABLED = \
             os.environ.get("OPENSEARCH_SSL_ENABLED", "True") == "True"
@@ -240,7 +226,7 @@ class OsmanConfig:
 
         init_params = {
             variable.lower(): self.__dict__[variable]
-            for variable in OSMAN_ENV_VARS
+            for variable in OSMAN_ENVIRONMENT_VARS
         }
 
         self.__init__(**init_params)
