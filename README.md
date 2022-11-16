@@ -71,6 +71,28 @@ In order to deactivate the environment, run `deactivate` command.
 
 You can also delete the environment as following: `rm -r ./venv/`
 
+### <a name="testing">:traffic_light: Testing 
+Run `pytest` in your devel environment to run all tests.
+
+The `OsmanConfig` class can be initialized from the environment by the following variables:
+
+| Variable | Default value | Type| Description |
+|----------|---------------|-----|-------------|
+| AUTH_METHOD             | `http` | string |`http` for username/password authentication, <br />`awsauth`for authentication with AWS user credentials |
+| OPENSEARCH_HOST         | None | string | address of OpenSearch host|
+| OPENSEARCH_PORT         | 443  | int | port number |
+| OPENSEARCH_SSL_ENABLED  | True | bool | use SSL? |
+| OPENSEARCH_USER         | None | string | username, for `http` AUTH_METHOD |
+| OPENSEARCH_SECRET       | None | string | password, for `http` AUTH_METHOD |
+| AWS_ACCESS_KEY_ID       | None | string | access key id for `awsauth` AUTH_METHOD, see [AWS4Auth](https://pypi.org/project/requests-aws4auth/) |
+| AWS_SECRET_ACCESS_KEY   | None | string | secret key for `awsauth` AUTH_METHOD|
+| AWS_REGION              | `us-east-1` | string | AWS region for `awsauth` AUTH_METHOD|
+| AWS_SERVICE             | `es` | string | AWS service for `awsauth` AUTH_METHOD|
+
+You can add these variables to your `.env` file, `make dev-env` will pass
+them to the devel Docker image. There is a test in [test_osman.py](tests/osman/test_osman.py) creating `Osman` instance
+using environment variables so you can use any OpenSearch instance for testing.
+
 ### <a name="versioning">:heavy_plus_sign: Versioning</a>
 
 *TODO*

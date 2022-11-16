@@ -139,3 +139,99 @@ def test_creating_osman_config_auth_method_url_par(_:str, params:dict, expected:
     oc = OsmanConfig(**params)
     for key, val in expected.items():
         assert oc.__dict__[key] == val
+
+def test_default_config_values():
+    """
+    Test OsmanConfig default values when environment variables don't exist.
+    NOTE: The external environment variables are deleted in conftest.py during init.
+    """
+    with pytest.raises(AssertionError) as ex:
+        oc = OsmanConfig()
+    assert ex.match("auth_method wrong")
+
+# NOTE: We can't use 'parametrized.expand' here as 'parametrized' doesn't support fixtures
+@pytest.mark.parametrize(
+    "test_case_name,env_vars,expected",
+    [
+        (
+            "test 'http' auth method",
+            {
+                "OPENSEARCH_HOST": "example.com",
+                "OPENSEARCH_PORT": 12345,
+                "OPENSEARCH_SSL_ENABLED": True,
+                "OPENSEARCH_USER": "user",
+                "OPENSEARCH_SECRET": "secret",
+                "AUTH_METHOD": "user",
+            },
+            {
+                "host_url": "https://user:secret@example.com:12345",
+                "opensearch_host": "example.com",
+                "opensearch_port": 12345,
+                "opensearch_ssl_enabled": True,
+                "opensearch_user": "user",
+                "opensearch_secret": "secret",
+                "auth_method": "http",
+            }
+        ),
+        (
+            "test deprecated AWS_USER, AWS_SECRET variables",
+            {
+                "OPENSEARCH_HOST": "example.com",
+                "OPENSEARCH_PORT": 12345,
+                "OPENSEARCH_SSL_ENABLED": True,
+                "AWS_USER": "user",
+                "AWS_SECRET": "secret",
+                "AUTH_METHOD": "user",
+            },
+            {
+                "host_url": "https://user:secret@example.com:12345",
+                "opensearch_host": "example.com",
+                "opensearch_port": 12345,
+                "opensearch_ssl_enabled": True,
+                "opensearch_user": "user",
+                "opensearch_secret": "secret",
+                "auth_method": "http",
+            }
+        ),
+        (
+            "test 'awsauth' auth method",
+            {
+                "OPENSEARCH_HOST": "example2.com",
+                "OPENSEARCH_PORT": 12345,
+                "AUTH_METHOD": "awsauth",
+                "AWS_ACCESS_KEY_ID": "access_key",
+                "AWS_SECRET_ACCESS_KEY": "secret_key",
+                "AWS_REGION": "region",
+                "AWS_SERVICE":"service",
+            },
+            {
+                "opensearch_host": "example2.com",
+                "opensearch_port": 12345,
+                "auth_method": "awsauth",
+                "aws_access_key_id": "access_key",
+                "aws_secret_access_key": "secret_key",
+                "aws_region": "region",
+                "aws_service":"service",
+            }
+        ),
+    ]
+)
+def test_config_values_from_environment(
+    monkeypatch,
+    test_case_name:str,
+    env_vars:dict,
+    expected:dict):
+    """
+    Test OsmanConfig for setting corect attributes from environment variables.
+    """
+
+    # Create some OsmanConfig instance, it will be overwritten
+    oc = OsmanConfig(host_url="http://example.com")
+
+    # Use monkeypatch to save environment for the outside world
+    for variable, val in env_vars.items():
+        monkeypatch.setenv(variable, str(val))
+
+    oc._reload_defaults_from_env()
+    for attribute, val in expected.items():
+        assert oc.__dict__[attribute] == val

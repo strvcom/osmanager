@@ -53,24 +53,34 @@ def test_connection_to_local_opensearch(_, local_config: dict):
     assert o.config
     assert o.client
 
-
-def test_connectig_osman_to_opensearch_from_environment_variables():
+def test_connectig_osman_to_opensearch_from_environment_variables(monkeypatch):
     """
     Test connectig Osman to Opensearch instance configured by
     environment variables
-
-    NOTE: For the future we will add complex testing of reading environment --
-    i.e. setting the environment during the test setup (pytest fixtures)
     """
+
+    # The environment variables were deleted in conftest.py, restore it
+    for variable, value in pytest.OSMAN_ENV_VARS_SAVED.items():
+        monkeypatch.setenv(variable, value)
+
     env_auth_method = os.environ.get("AUTH_METHOD")
     logging.info(f"Testing auth method:'{env_auth_method}'")
     if not env_auth_method:
         logging.warning("No auth method provided by the environment,"
                         " passing without testing")
         return
+
     logging.info("Testing Osman initialized by environment variables")
-    config = OsmanConfig()
-    logging.info(f"Host url from env config: '{config.host_url}'")
+    # Use some host_url to create instance
+    config = OsmanConfig(host_url="http://example.com")
+
+    # Overwrite config attributes from the environment
+    config._reload_defaults_from_env()
+
+    logging.info(f"OpenSearch host from env config: '{config.opensearch_host}'")
     o = Osman(config)
     assert o.config
     assert o.client
+    assert o.config.auth_method == env_auth_method
+    assert o.config.opensearch_host == \
+        pytest.OSMAN_ENV_VARS_SAVED["OPENSEARCH_HOST"]
