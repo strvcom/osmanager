@@ -28,7 +28,7 @@ def save_and_delete_osman_environment_vars():
     """
     logging.info("Deleting Osman environment variables")
     for variable in OSMAN_ENVIRONMENT_VARS + ["AWS_USER", "AWS_SECRET"]:
-        if os.environ.get(variable, None) == None:
+        if os.environ.get(variable, None) is None:
             continue
         OSMAN_ENV_VARS_SAVED[variable] = os.environ.pop(variable)
 
@@ -39,7 +39,7 @@ def save_and_delete_osman_environment_vars_fixture():
     """
     save_and_delete_osman_environment_vars()
 
-logging.info("Starting: '%s'" % __file__)
+logging.info("Starting: '%s'", __file__)
 # This can't be done through fixtures, it has to be called
 # before any 'import osman'
 save_and_delete_osman_environment_vars()

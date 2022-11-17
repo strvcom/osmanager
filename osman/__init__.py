@@ -1,6 +1,6 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
+"""
+osman package init
+"""
 from .osman import Osman
 from .config import OsmanConfig
 

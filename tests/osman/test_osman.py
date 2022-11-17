@@ -1,6 +1,9 @@
-import pytest
+"""
+Test Osman class initialization
+"""
 import logging
 import os
+import pytest
 from parameterized import parameterized
 
 from osman import Osman, OsmanConfig
@@ -22,18 +25,18 @@ def test_creating_osman_instance_with_no_config():
     """
     Test Osman client with no configuration
     """
-    o = Osman()
-    assert o.config
-    assert o.config.host_url == OpenSearchLocalConfig.url
+    os_man = Osman()
+    assert os_man.config
+    assert os_man.config.host_url == OpenSearchLocalConfig.url
 
 
 def test_creating_osman_instance_with_default_config():
     """
     Test Osman client with configuration from url
     """
-    o = Osman(OsmanConfig(host_url=OpenSearchLocalConfig.url))
-    assert o.config
-    assert o.config.host_url == OpenSearchLocalConfig.url
+    os_man = Osman(OsmanConfig(host_url=OpenSearchLocalConfig.url))
+    assert os_man.config
+    assert os_man.config.host_url == OpenSearchLocalConfig.url
 
 
 @parameterized.expand([(
@@ -49,9 +52,9 @@ def test_connection_to_local_opensearch(_, local_config: dict):
     """
     Test connection to a local Opensearch instance
     """
-    o = Osman(OsmanConfig(**local_config))
-    assert o.config
-    assert o.client
+    os_man = Osman(OsmanConfig(**local_config))
+    assert os_man.config
+    assert os_man.client
 
 def test_connectig_osman_to_opensearch_from_environment_variables(monkeypatch):
     """
@@ -64,7 +67,7 @@ def test_connectig_osman_to_opensearch_from_environment_variables(monkeypatch):
         monkeypatch.setenv(variable, value)
 
     env_auth_method = os.environ.get("AUTH_METHOD")
-    logging.info(f"Testing auth method:'{env_auth_method}'")
+    logging.info("Testing auth method:'%s'", env_auth_method)
     if not env_auth_method:
         logging.warning("No auth method provided by the environment,"
                         " passing without testing")
@@ -77,10 +80,11 @@ def test_connectig_osman_to_opensearch_from_environment_variables(monkeypatch):
     # Overwrite config attributes from the environment
     config._reload_defaults_from_env()
 
-    logging.info(f"OpenSearch host from env config: '{config.opensearch_host}'")
-    o = Osman(config)
-    assert o.config
-    assert o.client
-    assert o.config.auth_method == env_auth_method
-    assert o.config.opensearch_host == \
+    logging.info("OpenSearch host from env config: '%s'",
+        {config.opensearch_host})
+    os_man = Osman(config)
+    assert os_man.config
+    assert os_man.client
+    assert os_man.config.auth_method == env_auth_method
+    assert os_man.config.opensearch_host == \
         pytest.OSMAN_ENV_VARS_SAVED["OPENSEARCH_HOST"]

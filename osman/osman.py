@@ -1,9 +1,8 @@
-import os
-import uuid
+"""
+Osman -- OpenSearch Manager
+"""
 import logging
-import json
 
-from pathlib import Path
 from opensearchpy import OpenSearch, RequestsHttpConnection, helpers
 from requests_aws4auth import AWS4Auth
 
@@ -40,19 +39,17 @@ class Osman:
 
         os_params = {}
         if config.auth_method == "http":
-            logging.info(
-                f"Initializing OpenSearch by 'http' auth method, "
-                f"host:{config.opensearch_host}, "
-                f"port:{config.opensearch_port}"
+            logging.info("Initializing OpenSearch by 'http' auth method, "
+                "host: %s, port: %s",
+                {config.opensearch_host}, {config.opensearch_port}
             )
 
             os_params["hosts"] = [config.host_url]
 
         elif config.auth_method == "awsauth":
-            logging.info(
-                f"Initializing OpenSearch by 'awsauth' auth method, "
-                f"host:{config.opensearch_host}, "
-                f"port:{config.opensearch_port}"
+            logging.info("Initializing OpenSearch by 'awsauth' auth method, "
+                "host: %s, port: %s",
+                {config.opensearch_host}, {config.opensearch_port}
             )
 
             os_params["http_auth"] = AWS4Auth(
@@ -82,7 +79,7 @@ class Osman:
             logging.error("Getting cluster settings failed")
             raise
 
-    def create_index(self, name: str, mapping: dict = {}) -> dict:
+    def create_index(self, name: str, mapping: dict = None) -> dict:
         """
         Creates an index
 
@@ -155,30 +152,9 @@ class Osman:
             index=name
         )
 
-    def _bulk_json_data(self, index_name: str, documents: list = None):
-        """
-        Generate data from a json file
-
-        Parameters
-        ----------
-        index_name: str
-            The name of the index to store the data
-        documents: list
-            Documents should have following format: [{document}, {document}, ...]
-
-        """
-
-        for doc in documents:
-
-            yield {
-                "_index": index_name,
-                "_id": uuid.uuid4(),
-                "_source": doc
-            }
-
     def add_data_to_index(
         self,
-        name: str,
+        index_name: str,
         documents: list,
         refresh: bool = False
     ) -> dict:
@@ -187,7 +163,7 @@ class Osman:
 
         Parameters
         ----------
-        name: str
+        index_name: str
             Name of the index
         documents: json
             Documents should have following format: [{document}, {document}, ...]
@@ -201,22 +177,29 @@ class Osman:
             Dictionary with response
         """
 
-        logging.info(f"Creating data in index {name}...")
+        def bulk_json_data(index_name: str, documents: list = None):
+            for i, doc in enumerate(documents):
+                yield {
+                    "_index": index_name,
+                    "_id": i,
+                    "_source": doc
+                }
 
+        logging.info("Creating data in index '%s'...", index_name)
         try:
-            succes, _ = helpers.bulk(
+            docs_inserted, docs_failed = helpers.bulk(
                 self.client,
-                self._bulk_json_data(
-                    index_name=name, documents=documents
-                ), refresh=refresh, stats_only=False
+                bulk_json_data(index_name=index_name, documents=documents),
+                refresh=refresh, stats_only=True
             )
-        except Exception as e:
-            logging.debug(f"Failed: '{e}'")
-            raise RuntimeError("Bulk insert failed")
+        except Exception as exc:
+            logging.debug("Failed: '%s'", exc)
+            raise RuntimeError("Bulk insert failed") from exc
 
         res = {
             "acknowledged": True,
-            "documents_inserted": succes,
-            "index": name
+            "documents_inserted": docs_inserted,
+            "documents_failed": docs_failed,
+            "index": index_name
         }
         return res

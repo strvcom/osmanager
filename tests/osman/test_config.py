@@ -1,5 +1,8 @@
-import pytest
+"""
+Tests for OsmanConfig class
+"""
 import logging
+import pytest
 from parameterized import parameterized
 
 from osman import OsmanConfig
@@ -56,9 +59,9 @@ def test_creating_osman_config_by_host_url(_:str, host_url:str, expected:dict):
     """
     Test OsmanConfig initialized by host url
     """
-    oc = OsmanConfig(host_url=host_url)
+    config = OsmanConfig(host_url=host_url)
     for key, val in expected.items():
-        assert oc.__dict__[key] == val
+        assert config.__dict__[key] == val
 
 @parameterized.expand(
     [
@@ -136,9 +139,9 @@ def test_creating_osman_config_auth_method_url_par(_:str, params:dict, expected:
     Test OsmanConfig for different auth_methods initialized by host, port,
     user, secret parameters
     """
-    oc = OsmanConfig(**params)
+    config = OsmanConfig(**params)
     for key, val in expected.items():
-        assert oc.__dict__[key] == val
+        assert config.__dict__[key] == val
 
 def test_default_config_values():
     """
@@ -146,7 +149,7 @@ def test_default_config_values():
     NOTE: The external environment variables are deleted in conftest.py during init.
     """
     with pytest.raises(AssertionError) as ex:
-        oc = OsmanConfig()
+        OsmanConfig()
     assert ex.match("auth_method wrong")
 
 # NOTE: We can't use 'parametrized.expand' here as 'parametrized' doesn't support fixtures
@@ -224,14 +227,14 @@ def test_config_values_from_environment(
     """
     Test OsmanConfig for setting corect attributes from environment variables.
     """
-
+    logging.info("Testcase: '%s'", test_case_name)
     # Create some OsmanConfig instance, it will be overwritten
-    oc = OsmanConfig(host_url="http://example.com")
+    config = OsmanConfig(host_url="http://example.com")
 
     # Use monkeypatch to save environment for the outside world
     for variable, val in env_vars.items():
         monkeypatch.setenv(variable, str(val))
 
-    oc._reload_defaults_from_env()
+    config._reload_defaults_from_env()
     for attribute, val in expected.items():
-        assert oc.__dict__[attribute] == val
+        assert config.__dict__[attribute] == val

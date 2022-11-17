@@ -1,9 +1,0 @@
-{
-    "mappings": {
-      "properties": {
-        "age":    {"type": "integer"},  
-        "id":  { "type": "integer"}, 
-        "name":   {"type": "text"}     
-      }
-    }
-  }
