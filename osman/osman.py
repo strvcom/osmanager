@@ -2,6 +2,7 @@
 Osman -- OpenSearch Manager
 """
 import logging
+import uuid
 
 from opensearchpy import OpenSearch, RequestsHttpConnection, helpers
 from requests_aws4auth import AWS4Auth
@@ -152,12 +153,30 @@ class Osman:
             index=name
         )
 
-    def add_data_to_index(
-        self,
-        index_name: str,
-        documents: list,
-        refresh: bool = False
-    ) -> dict:
+    @staticmethod
+    def _bulk_json_data(index_name: str, documents: list, id_key: str = None):
+        """
+        Helper method for add_data_to_index
+
+        Parameters
+        ----------
+        index_name: str
+            name of the index
+        documents:
+            iterable yielding documents
+        id_key:
+            key from a document used for indexing or None
+        """
+        for doc in documents:
+            index_id = doc[id_key] if id_key else uuid.uuid4()
+            yield {
+                "_index": index_name,
+                "_id": index_id,
+                "_source": doc
+            }
+
+    def add_data_to_index(self, index_name: str, documents: list,
+        id_key: str = None, refresh: bool = False) -> dict:
         """
         Bulk insert data to index
 
@@ -166,7 +185,10 @@ class Osman:
         index_name: str
             Name of the index
         documents: json
-            Documents should have following format: [{document}, {document}, ...]
+            Documents in the following format: [{document}, {document}, ...]
+        id_key: str
+            Key from the document used as id for indexing. If None uuid4
+            is created as id.
         refresh: bool
             Should the shards in OS refresh automatically?
             True hurts the cluster performance
@@ -177,29 +199,20 @@ class Osman:
             Dictionary with response
         """
 
-        def bulk_json_data(index_name: str, documents: list = None):
-            for i, doc in enumerate(documents):
-                yield {
-                    "_index": index_name,
-                    "_id": i,
-                    "_source": doc
-                }
-
         logging.info("Creating data in index '%s'...", index_name)
         try:
-            docs_inserted, docs_failed = helpers.bulk(
+            docs_inserted, _ = helpers.bulk(
                 self.client,
-                bulk_json_data(index_name=index_name, documents=documents),
+                self._bulk_json_data(index_name=index_name,
+                    documents=documents, id_key=id_key),
                 refresh=refresh, stats_only=True
             )
         except Exception as exc:
             logging.debug("Failed: '%s'", exc)
             raise RuntimeError("Bulk insert failed") from exc
 
-        res = {
+        return {
             "acknowledged": True,
             "documents_inserted": docs_inserted,
-            "documents_failed": docs_failed,
             "index": index_name
         }
-        return res

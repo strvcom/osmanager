@@ -41,7 +41,7 @@ def get_ids_from_response(response):
         return None
 
     if len(response["hits"]["hits"]) == 0:
-        logging.warning("Empty response")
+        logging.warning("No search results")
         return []
 
     if "id" not in response["hits"]["hits"][0]["_source"]:
@@ -91,17 +91,18 @@ def test_index_exists(index_handler):
     "documents",
     [
         [
-        {"age": 10, "id": 123, "name": "james"},
-        {"age": 23, "id": 456, "name": "lordos"},
-        {"age": 45, "id": 49, "name": "fred"},
-        {"age": 10, "id": 10, "name": "carlos"}
+            {"age": 10, "id": 123, "name": "james"},
+            {"age": 23, "id": 456, "name": "lordos"},
+            {"age": 45, "id": 49, "name": "fred"},
+            {"age": 10, "id": 10, "name": "carlos"}
         ],
         [
             # Empty document list
         ],
     ]
 )
-def test_data_insert(index_handler, documents: list):
+@pytest.mark.parametrize("id_key", ["id", None])
+def test_data_insert(index_handler, documents: list, id_key: str):
     """
     Test inserting data
 
@@ -111,6 +112,8 @@ def test_data_insert(index_handler, documents: list):
         index_handler fixture, returning the name of the index for testing
     documents: list
         list of documents [{document}, {document}, ...]
+    id_key: str
+        key in the document used for indexing
     """
 
     os_man = OS_MAN
@@ -119,7 +122,7 @@ def test_data_insert(index_handler, documents: list):
 
     # Put refresh to True for immediate results
     os_man.add_data_to_index(index_name=index_name, documents=documents,
-        refresh=True
+        id_key=id_key, refresh=True
     )
 
     # Check that documents in OpenSearch are the same as in documents

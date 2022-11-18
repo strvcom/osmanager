@@ -28,7 +28,7 @@ def save_and_delete_osman_environment_vars():
     """
     logging.info("Deleting Osman environment variables")
     for variable in OSMAN_ENVIRONMENT_VARS + ["AWS_USER", "AWS_SECRET"]:
-        if os.environ.get(variable, None) is None:
+        if os.environ.get(variable) is None:
             continue
         OSMAN_ENV_VARS_SAVED[variable] = os.environ.pop(variable)
 
