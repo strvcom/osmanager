@@ -15,7 +15,7 @@ class OsmanConfig:
     ----------------
     Class attributes are initialized by the environment variables with
     the same name.
-   
+
     OPENSEARCH_HOST: str
         OpenSearch instance host
     OPENSEARCH_PORT: int
@@ -70,7 +70,7 @@ class OsmanConfig:
     -------------------
     host_url: str
         a complete url of the OpenSearch instance, with schema/user/pass
-   
+
     For the following attributes description see the class attributes above.
 
     opensearch_host: str
@@ -111,18 +111,18 @@ class OsmanConfig:
         ----------
         host_url: str
             a complete url of the OpenSearch instance, with schema/user/pass
-       
+
         For the following attributes description see the class attributes above.
         NOTE: You have to provide either 'host_url' or 'auth_method' with aditional params
-    
+
         opensearch_host: str
         opensearch_port: int
         opensearch_ssl_enabled: bool
         opensearch_user: str
         opensearch_secret: str
-    
+
         auth_method: str
-    
+
         aws_access_key_id: str
         aws_secret_access_key: str
         aws_region: str
@@ -132,7 +132,7 @@ class OsmanConfig:
 
         # non empty host_url takes precedence over auth_method
         if host_url:
-            logging.info(f"Using host_url: '{host_url}'")
+            logging.info("Using host_url: '%s'", host_url)
             self.host_url = host_url
             self.auth_method = "http"
 
@@ -158,8 +158,8 @@ class OsmanConfig:
 
         assert opensearch_host
         assert opensearch_port
-        assert type(opensearch_port) == int
-        assert type(opensearch_ssl_enabled) == bool
+        assert isinstance(opensearch_port, int)
+        assert isinstance(opensearch_ssl_enabled, bool)
 
         self.opensearch_host = opensearch_host
         self.opensearch_port = opensearch_port
@@ -167,12 +167,13 @@ class OsmanConfig:
 
         if auth_method in ["http", "user"]:
             self.auth_method = "http"
-            logging.info(f"Using auth_method 'http' and "
-                f"'{opensearch_host}:{opensearch_port}'")
+            logging.info("Using auth_method 'http' and '%s:%s'",
+                opensearch_host, opensearch_port)
 
             os_scheme = "https" if opensearch_ssl_enabled else "http"
             if not opensearch_user:
-                self.host_url = f"{os_scheme}://{opensearch_host}:{opensearch_port}"
+                self.host_url = \
+                    f"{os_scheme}://{opensearch_host}:{opensearch_port}"
                 return
 
             assert opensearch_secret
@@ -185,18 +186,19 @@ class OsmanConfig:
 
             self.opensearch_user = opensearch_user
             self.opensearch_secret = opensearch_secret
-            return            
-         
+            return
+
         # AWS auth method
         self.auth_method = "awsauth"
-        logging.info(f"Using auth_method 'awsauth' and '{opensearch_host}:{opensearch_port}'")
+        logging.info("Using auth_method 'awsauth' and '%s:%s'",
+            opensearch_host, opensearch_port)
         self.host_url = ""
 
         assert aws_access_key_id
         assert aws_secret_access_key
         assert aws_region
         assert aws_service
- 
+
         self.aws_access_key_id = aws_access_key_id
         self.aws_secret_access_key = aws_secret_access_key
         self.aws_region = aws_region
