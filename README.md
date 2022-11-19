@@ -10,6 +10,8 @@ work with OpenSearch.
 - [Installation](#installation)
 - [Contribution](#contribution)
     - [Local environment setup](#local-env-setup)
+    - [Testing](#testing)
+    - [Local lintering](#local-lintering)
     - [Versioning](#versioning)
     - [Contributers](#contributors)
 - [Specs](#specs)
@@ -71,7 +73,8 @@ In order to deactivate the environment, run `deactivate` command.
 
 You can also delete the environment as following: `rm -r ./venv/`
 
-### <a name="testing">:traffic_light: Testing 
+### <a name="testing">:traffic_light: Testing
+
 Run `pytest` in your devel environment to run all tests.
 
 The `OsmanConfig` class can be initialized from the environment by the following variables:
@@ -93,6 +96,13 @@ You can add these variables to your `.env` file, `make dev-env` will pass
 them to the devel Docker image. There is a test in [test_osman.py](tests/osman/test_osman.py) creating `Osman` instance
 using environment variables so you can use any OpenSearch instance for testing.
 
+### <a name="local-lintering">:broom: Local lintering
+
+For running linters from GitHub actions locally, you need to do the following.
+
+1. Install [`pre-commit`](https://pypi.org/project/pre-commit/) library.
+1. From root project directory, run: `pre-commit run --all-files`
+
 ### <a name="versioning">:heavy_plus_sign: Versioning</a>
 
 *TODO*
@@ -103,7 +113,7 @@ using environment variables so you can use any OpenSearch instance for testing.
 - [Niek Mereu](https://github.com/niekstrv)
 - [Vladimír Kadlec](https://github.com/vladimirkadlec-strv)
 
-### <a name="specs">:books: Specs</a>
+## <a name="specs">:books: Specs</a>
 
 #### Requirements
 
