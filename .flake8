@@ -40,6 +40,8 @@ ignore =
     E501
     # Allow custom exceptions whose name ends with "Exception"
     N818
+    # Don't warn on use of asserts
+    S101
     # wemake-python-styleguide
     # Allow blacklisted variable names that can be clear enough in method context
     WPS110
@@ -76,8 +78,6 @@ ignore =
     WPS433
     WPS454
     WPS501
-    # Allow Exceptions to have suffix 'Exception' rather than 'Error'
-    N818
     WPS507
 
 exclude =
@@ -85,7 +85,7 @@ exclude =
     venv
     *.md
 inline_quotes = double
-max_line_length = 88
+max_line_length = 79
 show_source = true
 extended_default_ignore = []
 max_imports = 20
@@ -93,8 +93,6 @@ docstring_style = numpy
 
 per-file-ignores =
     tests/*:
-        # Don't warn on use of asserts in tests
-        S101
         # Don't require docstrings in tests
         DAR101
         DAR201
