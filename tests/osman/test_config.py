@@ -143,16 +143,20 @@ def test_creating_osman_config_auth_method_url_par(_:str, params:dict, expected:
     for key, val in expected.items():
         assert config.__dict__[key] == val
 
+
 def test_default_config_values():
     """
     Test OsmanConfig default values when environment variables don't exist.
-    NOTE: The external environment variables are deleted in conftest.py during init.
+    NOTE: The external environment variables are deleted in conftest.py
+    during test init/collection phase.
     """
     with pytest.raises(AssertionError) as ex:
         OsmanConfig()
     assert ex.match("auth_method wrong")
 
-# NOTE: We can't use 'parametrized.expand' here as 'parametrized' doesn't support fixtures
+
+# NOTE: We can't use 'parametrized.expand' here as 'parametrized' doesn't
+# support fixtures
 @pytest.mark.parametrize(
     "test_case_name,env_vars,expected",
     [
