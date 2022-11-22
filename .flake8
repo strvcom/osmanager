@@ -1,0 +1,106 @@
+[flake8]
+select =
+    # flake8-bandit
+    S
+    # flake-brokenline
+    N
+    # flake8-bugbear
+    B
+    # flake8-comprehensions
+    C4
+    # flake8-debugger
+    T
+    # flake8-docstrings
+    D
+    # flake8-eradicate
+    E80
+    # flake8-string-format
+    P
+    # mccabe
+    C90
+    # pep8-naming
+    N
+    # pycodestyle
+    E
+    W
+    # pyflakes
+    F
+    # wemake-python-styleguide
+    WPS
+    # darglint
+    DAR
+
+ignore =
+    # pycodestyle
+    # Allow for line breaks where Black decides are valid
+    W503
+    # Let Black put whitespace before :
+    E203
+    # Allow for long lines since we delegate to Black for enforcement
+    E501
+    # Allow custom exceptions whose name ends with "Exception"
+    N818
+    # Don't warn on use of asserts
+    S101
+    # wemake-python-styleguide
+    # Allow blacklisted variable names that can be clear enough in method context
+    WPS110
+    # Allow upper-case constants in Enum subclasses
+    WPS115
+    # Allow many module members
+    WPS202
+    # Allow "too many"
+    WPS211
+    # Ignore 'too many return statements' - noqa parse inconsistent between py38 vs prior
+    WPS212
+    # Allow f-strings
+    WPS305
+    # Various WPS refactor heavy warnings to ignore that currently have a poor risk/reward tradeoff.
+    WPS100
+    WPS111
+    WPS112
+    WPS201
+    WPS220
+    WPS221
+    WPS226
+    WPS229
+    WPS231
+    WPS232
+    WPS237
+    WPS316
+    WPS337
+    WPS352
+    WPS404
+    WPS407
+    WPS412
+    WPS429
+    WPS430
+    WPS433
+    WPS454
+    WPS501
+    WPS507
+
+exclude =
+    .venv
+    venv
+    *.md
+inline_quotes = double
+max_line_length = 79
+show_source = true
+extended_default_ignore = []
+max_imports = 20
+docstring_style = numpy
+
+per-file-ignores =
+    tests/*:
+        # Don't require docstrings in tests
+        DAR101
+        DAR201
+        DAR301
+        D100
+        D101
+        D102
+        D103
+        D104
+        D105
+        D107
