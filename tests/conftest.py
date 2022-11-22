@@ -16,25 +16,16 @@ sys.path = ORIG_SYS_PATH
 
 # Dictionary to save deleted environment variables
 OSMAN_ENV_VARS_SAVED = {}
-def pytest_configure():
-    """
-    Propagate global variable to the tests.
-    """
-    pytest.OSMAN_ENV_VARS_SAVED = OSMAN_ENV_VARS_SAVED
 
+def pytest_sessionstart(session):
+    logging.info("Starting: '%s'", __file__)
 
-def save_and_delete_osman_environment_vars():
-    """
-    Delete Osman's variables from the environment.
-    """
+    # The following can't be done through fixtures, it has to be called
+    # before any 'import osman'
     logging.info("Deleting Osman environment variables")
     for variable in OSMAN_ENVIRONMENT_VARS + ["AWS_USER", "AWS_SECRET"]:
         if os.environ.get(variable) is None:
             continue
         OSMAN_ENV_VARS_SAVED[variable] = os.environ.pop(variable)
-
-
-logging.info("Starting: '%s'", __file__)
-# This can't be done through fixtures, it has to be called
-# before any 'import osman'
-save_and_delete_osman_environment_vars()
+    
+    pytest.OSMAN_ENV_VARS_SAVED = OSMAN_ENV_VARS_SAVED
