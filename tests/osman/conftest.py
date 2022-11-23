@@ -1,15 +1,18 @@
 """
 Osman instance test configuration and setup
 """
-import time
 import logging
+import time
+
 import pytest
+
 
 def get_random_index_name(prefix: str) -> str:
     """
     Return a random index name
     """
     return f"{prefix}_{int(time.time()*1_000_000)}"
+
 
 @pytest.fixture
 def random_index_name(request: pytest.FixtureRequest):
@@ -18,6 +21,7 @@ def random_index_name(request: pytest.FixtureRequest):
     manual index manipulation
     """
     return get_random_index_name(request.function.__name__)
+
 
 @pytest.fixture
 def index_handler(request: pytest.FixtureRequest):

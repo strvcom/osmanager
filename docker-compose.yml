@@ -54,16 +54,16 @@ services:
             # minimum and maximum Java heap size, recommend setting both to 50%
             # of system RAM
             OPENSEARCH_JAVA_OPTS: "-Xms512m -Xmx512m"
-            
+
             # disables execution of install_demo_configuration.sh bundled with
             # security plugin, which installs demo certificates and security
             # configurations to OpenSearch
             DISABLE_INSTALL_DEMO_CONFIG: "true"
-            
+
             # disables security plugin entirely in OpenSearch by setting
             # plugins.security.disabled: true in opensearch.yml
             DISABLE_SECURITY_PLUGIN: "true"
-            
+
             # disables bootstrap checks that are enabled when network.host is
             # set to a non-loopback address
             discovery.type: single-node
@@ -74,7 +74,7 @@ services:
           nofile:
             # maximum number of open files for the OpenSearch user, set to at
             # least 65536 on modern systems
-            soft: 65536 
+            soft: 65536
             hard: 65536
         volumes:
             - opensearch-data:/usr/share/opensearch/data

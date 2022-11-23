@@ -1,6 +1,8 @@
 import logging
 import os
+
 import pytest
+
 
 def test_environment():
     """

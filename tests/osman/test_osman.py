@@ -3,6 +3,7 @@ Test Osman class initialization
 """
 import logging
 import os
+
 import pytest
 from parameterized import parameterized
 
@@ -14,6 +15,7 @@ class OpenSearchLocalConfig:
     Config holder for local OpenSearch instance
 
     """
+
     url = "http://opensearch-node:9200"
     auth_method = "http"
     host = "opensearch-node"
@@ -27,7 +29,7 @@ INDEX_MAPPING = {
         "properties": {
             "age": {"type": "integer"},
             "id": {"type": "integer"},
-            "name": {"type": "text"}
+            "name": {"type": "text"},
         }
     }
 }
@@ -41,6 +43,7 @@ INDEX_HANDLER_FIXTURE_PARAMS = {
     "argvalues": [{"mapping": INDEX_MAPPING, "os_man": OS_MAN}],
     "indirect": True,
 }
+
 
 def test_creating_osman_instance_with_no_config():
     """
@@ -60,15 +63,19 @@ def test_creating_osman_instance_with_default_config():
     assert os_man.config.host_url == OpenSearchLocalConfig.url
 
 
-@parameterized.expand([(
-    "test local instance",
-    {
-        "auth_method": OpenSearchLocalConfig.auth_method,
-        "opensearch_host": OpenSearchLocalConfig.host,
-        "opensearch_port": OpenSearchLocalConfig.port,
-        "opensearch_ssl_enabled": OpenSearchLocalConfig.ssl_enabled,
-    }
-)])
+@parameterized.expand(
+    [
+        (
+            "test local instance",
+            {
+                "auth_method": OpenSearchLocalConfig.auth_method,
+                "opensearch_host": OpenSearchLocalConfig.host,
+                "opensearch_port": OpenSearchLocalConfig.port,
+                "opensearch_ssl_enabled": OpenSearchLocalConfig.ssl_enabled,
+            },
+        )
+    ]
+)
 def test_connection_to_local_opensearch(_, local_config: dict):
     """
     Test connection to a local Opensearch instance
@@ -91,8 +98,10 @@ def test_connectig_osman_to_opensearch_from_environment_variables(monkeypatch):
     env_auth_method = os.environ.get("AUTH_METHOD")
     logging.info("Testing auth method:'%s'", env_auth_method)
     if not env_auth_method:
-        logging.warning("No auth method provided by the environment,"
-                        " passing without testing")
+        logging.warning(
+            "No auth method provided by the environment,"
+            " passing without testing"
+        )
         return
 
     logging.info("Testing Osman initialized by environment variables")
@@ -101,8 +110,9 @@ def test_connectig_osman_to_opensearch_from_environment_variables(monkeypatch):
     # Overwrite config attributes from the environment
     config._reload_defaults_from_env()
 
-    logging.info("OpenSearch host from env config: '%s'",
-        {config.opensearch_host})
+    logging.info(
+        "OpenSearch host from env config: '%s'", {config.opensearch_host}
+    )
     os_man = Osman(config)
     assert os_man.config
     assert os_man.client
@@ -177,12 +187,12 @@ def test_index_exists(index_handler):
             {"age": 10, "id": 123, "name": "james"},
             {"age": 23, "id": 456, "name": "lordos"},
             {"age": 45, "id": 49, "name": "fred"},
-            {"age": 10, "id": 10, "name": "carlos"}
+            {"age": 10, "id": 10, "name": "carlos"},
         ],
         [
             # Empty document list
         ],
-    ]
+    ],
 )
 @pytest.mark.parametrize("id_key", ["id", None])
 def test_data_insert(index_handler, documents: list, id_key: str):
@@ -204,8 +214,8 @@ def test_data_insert(index_handler, documents: list, id_key: str):
     index_name = index_handler
 
     # Put refresh to True for immediate results
-    os_man.add_data_to_index(index_name=index_name, documents=documents,
-        id_key=id_key, refresh=True
+    os_man.add_data_to_index(
+        index_name=index_name, documents=documents, id_key=id_key, refresh=True
     )
 
     # Check that documents in OpenSearch are the same as in documents
@@ -225,8 +235,9 @@ def test_data_insert(index_handler, documents: list, id_key: str):
     for document in documents:
         doc_id = document["id"]
         os_document = [
-            doc["_source"] for doc in search_results["hits"]["hits"]
+            doc["_source"]
+            for doc in search_results["hits"]["hits"]
             if doc["_source"]["id"] == doc_id
-          ][0]
+        ][0]
 
         assert document == os_document

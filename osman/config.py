@@ -1,11 +1,14 @@
 """
 Osman configuration module
 """
-import os
 import logging
+import os
 import urllib
+
 from opensearchpy import OpenSearch
+
 from .environment import OSMAN_ENVIRONMENT_VARS
+
 
 class OsmanConfig:
     """
@@ -46,16 +49,20 @@ class OsmanConfig:
         Default: "es"
 
     """
+
     OPENSEARCH_HOST = os.environ.get("OPENSEARCH_HOST", None)
     OPENSEARCH_PORT = int(os.environ.get("OPENSEARCH_PORT", 443))
-    OPENSEARCH_SSL_ENABLED = \
+    OPENSEARCH_SSL_ENABLED = (
         os.environ.get("OPENSEARCH_SSL_ENABLED", "True") == "True"
+    )
 
     # For backward compatibility we allow AWS_USER and AWS_SECRET variables
-    OPENSEARCH_USER = os.environ.get("OPENSEARCH_USER",
-        os.environ.get("AWS_USER", None))
-    OPENSEARCH_SECRET = os.environ.get("OPENSEARCH_SECRET",
-        os.environ.get("AWS_SECRET", None))
+    OPENSEARCH_USER = os.environ.get(
+        "OPENSEARCH_USER", os.environ.get("AWS_USER", None)
+    )
+    OPENSEARCH_SECRET = os.environ.get(
+        "OPENSEARCH_SECRET", os.environ.get("AWS_SECRET", None)
+    )
 
     AUTH_METHOD = os.environ.get("AUTH_METHOD", None)
 
@@ -87,22 +94,21 @@ class OsmanConfig:
     aws_service: str
 
     """
-    def __init__(self,
-        host_url:str=None,
 
-        opensearch_host:str=OPENSEARCH_HOST,
-        opensearch_port:str=OPENSEARCH_PORT,
-        opensearch_ssl_enabled:bool=OPENSEARCH_SSL_ENABLED,
-        opensearch_user:str=OPENSEARCH_USER,
-        opensearch_secret:str=OPENSEARCH_SECRET,
-
-        auth_method:str=AUTH_METHOD,
-
-        aws_access_key_id:str=AWS_ACCESS_KEY_ID,
-        aws_secret_access_key:str=AWS_SECRET_ACCESS_KEY,
-        aws_region:str=AWS_REGION,
-        aws_service:str=AWS_SERVICE,
-        ):
+    def __init__(
+        self,
+        host_url: str = None,
+        opensearch_host: str = OPENSEARCH_HOST,
+        opensearch_port: str = OPENSEARCH_PORT,
+        opensearch_ssl_enabled: bool = OPENSEARCH_SSL_ENABLED,
+        opensearch_user: str = OPENSEARCH_USER,
+        opensearch_secret: str = OPENSEARCH_SECRET,
+        auth_method: str = AUTH_METHOD,
+        aws_access_key_id: str = AWS_ACCESS_KEY_ID,
+        aws_secret_access_key: str = AWS_SECRET_ACCESS_KEY,
+        aws_region: str = AWS_REGION,
+        aws_service: str = AWS_SERVICE,
+    ):
 
         """
         Init OsmanConfig
@@ -143,8 +149,9 @@ class OsmanConfig:
 
             self.opensearch_host = parsed_url.hostname
             if not parsed_url.port:
-                self.opensearch_port = \
+                self.opensearch_port = (
                     80 if parsed_url.scheme == "http" else 443
+                )
             else:
                 self.opensearch_port = parsed_url.port
 
@@ -153,8 +160,11 @@ class OsmanConfig:
             # All other parameters are ignored
             return
 
-        assert auth_method in ["http", "user", "awsauth"],\
-            "auth_method wrong or missing"
+        assert auth_method in [
+            "http",
+            "user",
+            "awsauth",
+        ], "auth_method wrong or missing"
 
         assert opensearch_host
         assert opensearch_port
@@ -167,22 +177,27 @@ class OsmanConfig:
 
         if auth_method in ["http", "user"]:
             self.auth_method = "http"
-            logging.info("Using auth_method 'http' and '%s:%s'",
-                opensearch_host, opensearch_port)
+            logging.info(
+                "Using auth_method 'http' and '%s:%s'",
+                opensearch_host,
+                opensearch_port,
+            )
 
             os_scheme = "https" if opensearch_ssl_enabled else "http"
             if not opensearch_user:
-                self.host_url = \
+                self.host_url = (
                     f"{os_scheme}://{opensearch_host}:{opensearch_port}"
+                )
                 return
 
             assert opensearch_secret
             os_creds_user = urllib.parse.quote_plus(f"{opensearch_user}")
             os_creds_pass = urllib.parse.quote_plus(f"{opensearch_secret}")
 
-            self.host_url = \
-              f"{os_scheme}://{os_creds_user}:{os_creds_pass}"\
-              f"@{opensearch_host}:{opensearch_port}"
+            self.host_url = (
+                f"{os_scheme}://{os_creds_user}:{os_creds_pass}"
+                f"@{opensearch_host}:{opensearch_port}"
+            )
 
             self.opensearch_user = opensearch_user
             self.opensearch_secret = opensearch_secret
@@ -190,8 +205,11 @@ class OsmanConfig:
 
         # AWS auth method
         self.auth_method = "awsauth"
-        logging.info("Using auth_method 'awsauth' and '%s:%s'",
-            opensearch_host, opensearch_port)
+        logging.info(
+            "Using auth_method 'awsauth' and '%s:%s'",
+            opensearch_host,
+            opensearch_port,
+        )
         self.host_url = ""
 
         assert aws_access_key_id
@@ -214,17 +232,22 @@ class OsmanConfig:
             if variable in ["OPENSEARCH_PORT", "OPENSEARCH_SSL_ENABLED"]:
                 continue
             self.__dict__[variable] = os.environ.get(
-                variable, self.__class__.__dict__[variable])
+                variable, self.__class__.__dict__[variable]
+            )
 
         self.OPENSEARCH_PORT = int(os.environ.get("OPENSEARCH_PORT", 443))
-        self.OPENSEARCH_SSL_ENABLED = \
+        self.OPENSEARCH_SSL_ENABLED = (
             os.environ.get("OPENSEARCH_SSL_ENABLED", "True") == "True"
+        )
 
         # For backward compatibility we allow AWS_USER and AWS_SECRET variables
-        self.OPENSEARCH_USER = os.environ.get("OPENSEARCH_USER",
-            os.environ.get("AWS_USER", self.OPENSEARCH_USER))
-        self.OPENSEARCH_SECRET = os.environ.get("OPENSEARCH_SECRET",
-            os.environ.get("AWS_SECRET", self.OPENSEARCH_SECRET))
+        self.OPENSEARCH_USER = os.environ.get(
+            "OPENSEARCH_USER", os.environ.get("AWS_USER", self.OPENSEARCH_USER)
+        )
+        self.OPENSEARCH_SECRET = os.environ.get(
+            "OPENSEARCH_SECRET",
+            os.environ.get("AWS_SECRET", self.OPENSEARCH_SECRET),
+        )
 
         init_params = {
             variable.lower(): self.__dict__[variable]
