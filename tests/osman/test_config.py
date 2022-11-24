@@ -1,11 +1,11 @@
-"""
-Tests for OsmanConfig class
-"""
+"""Tests for OsmanConfig class."""
 import logging
+
 import pytest
 from parameterized import parameterized
 
 from osman import OsmanConfig
+
 
 @parameterized.expand(
     [
@@ -18,7 +18,7 @@ from osman import OsmanConfig
                 "opensearch_ssl_enabled": False,
                 "opensearch_user": None,
                 "opensearch_secret": None,
-            }
+            },
         ),
         (
             "test https url",
@@ -29,7 +29,7 @@ from osman import OsmanConfig
                 "opensearch_ssl_enabled": True,
                 "opensearch_user": None,
                 "opensearch_secret": None,
-            }
+            },
         ),
         (
             "test user/secret/default port",
@@ -40,7 +40,7 @@ from osman import OsmanConfig
                 "opensearch_ssl_enabled": True,
                 "opensearch_user": "user",
                 "opensearch_secret": "secret",
-            }
+            },
         ),
         (
             "test user/secret/port",
@@ -51,17 +51,18 @@ from osman import OsmanConfig
                 "opensearch_ssl_enabled": True,
                 "opensearch_user": "user",
                 "opensearch_secret": "secret",
-            }
+            },
         ),
     ]
 )
-def test_creating_osman_config_by_host_url(_:str, host_url:str, expected:dict):
-    """
-    Test OsmanConfig initialized by host url
-    """
+def test_creating_osman_config_by_host_url(
+    _: str, host_url: str, expected: dict
+):
+    """Test OsmanConfig initialized by host url."""
     config = OsmanConfig(host_url=host_url)
     for key, val in expected.items():
         assert config.__dict__[key] == val
+
 
 @parameterized.expand(
     [
@@ -75,9 +76,7 @@ def test_creating_osman_config_by_host_url(_:str, host_url:str, expected:dict):
                 "opensearch_secret": "secret",
                 "auth_method": "http",
             },
-            {
-                "host_url": "https://user:secret@example.com:12345"
-            }
+            {"host_url": "https://user:secret@example.com:12345"},
         ),
         (
             "test 'user' auth method",
@@ -92,7 +91,7 @@ def test_creating_osman_config_by_host_url(_:str, host_url:str, expected:dict):
             {
                 "host_url": "https://user:secret@example.com:12345",
                 "auth_method": "http",
-            }
+            },
         ),
         (
             "test 'awsauth' auth method and default aws_region and aws_service",
@@ -109,7 +108,7 @@ def test_creating_osman_config_by_host_url(_:str, host_url:str, expected:dict):
                 "auth_method": "awsauth",
                 "aws_access_key_id": "access_key",
                 "aws_secret_access_key": "secret_key",
-            }
+            },
         ),
         (
             "test 'awsauth' auth method",
@@ -120,7 +119,7 @@ def test_creating_osman_config_by_host_url(_:str, host_url:str, expected:dict):
                 "aws_access_key_id": "access_key",
                 "aws_secret_access_key": "secret_key",
                 "aws_region": "region",
-                "aws_service":"service",
+                "aws_service": "service",
             },
             {
                 "opensearch_host": "example2.com",
@@ -129,15 +128,16 @@ def test_creating_osman_config_by_host_url(_:str, host_url:str, expected:dict):
                 "aws_access_key_id": "access_key",
                 "aws_secret_access_key": "secret_key",
                 "aws_region": "region",
-                "aws_service":"service",
-            }
+                "aws_service": "service",
+            },
         ),
     ]
 )
-def test_creating_osman_config_auth_method_url_par(_:str, params:dict, expected:dict):
+def test_osman_config_auth_method_url_par(_: str, params: dict, expected: dict):
     """
-    Test OsmanConfig for different auth_methods initialized by host, port,
-    user, secret parameters
+    Test OsmanConfig for different auth_methods.
+
+    Initialized by host, port, user, secret parameters
     """
     config = OsmanConfig(**params)
     for key, val in expected.items():
@@ -147,12 +147,13 @@ def test_creating_osman_config_auth_method_url_par(_:str, params:dict, expected:
 def test_default_config_values():
     """
     Test OsmanConfig default values when environment variables don't exist.
+
     NOTE: The external environment variables are deleted in conftest.py
     during test init/collection phase.
     """
     with pytest.raises(AssertionError) as ex:
         OsmanConfig()
-    assert ex.match("auth_method wrong")
+        assert ex.match("auth_method wrong")
 
 
 # NOTE: We can't use 'parametrized.expand' here as 'parametrized' doesn't
@@ -178,7 +179,7 @@ def test_default_config_values():
                 "opensearch_user": "user",
                 "opensearch_secret": "secret",
                 "auth_method": "http",
-            }
+            },
         ),
         (
             "test deprecated AWS_USER, AWS_SECRET variables",
@@ -198,7 +199,7 @@ def test_default_config_values():
                 "opensearch_user": "user",
                 "opensearch_secret": "secret",
                 "auth_method": "http",
-            }
+            },
         ),
         (
             "test 'awsauth' auth method",
@@ -209,7 +210,7 @@ def test_default_config_values():
                 "AWS_ACCESS_KEY_ID": "access_key",
                 "AWS_SECRET_ACCESS_KEY": "secret_key",
                 "AWS_REGION": "region",
-                "AWS_SERVICE":"service",
+                "AWS_SERVICE": "service",
             },
             {
                 "opensearch_host": "example2.com",
@@ -218,19 +219,15 @@ def test_default_config_values():
                 "aws_access_key_id": "access_key",
                 "aws_secret_access_key": "secret_key",
                 "aws_region": "region",
-                "aws_service":"service",
-            }
+                "aws_service": "service",
+            },
         ),
-    ]
+    ],
 )
 def test_config_values_from_environment(
-    monkeypatch,
-    test_case_name:str,
-    env_vars:dict,
-    expected:dict):
-    """
-    Test OsmanConfig for setting corect attributes from environment variables.
-    """
+    monkeypatch, test_case_name: str, env_vars: dict, expected: dict
+):
+    """Test OsmanConfig for setting corect attributes from environment."""
     logging.info("Testcase: '%s'", test_case_name)
     # Create some OsmanConfig instance, it will be overwritten
     config = OsmanConfig(host_url="http://example.com")
@@ -239,6 +236,6 @@ def test_config_values_from_environment(
     for variable, val in env_vars.items():
         monkeypatch.setenv(variable, str(val))
 
-    config._reload_defaults_from_env()
-    for attribute, val in expected.items():
-        assert config.__dict__[attribute] == val
+    config._reload_defaults_from_env()  # noqa: WPS437
+    for attribute, attr_val in expected.items():
+        assert config.__dict__[attribute] == attr_val

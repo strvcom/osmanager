@@ -33,7 +33,7 @@ ARG USERNAME=devuser
 RUN groupadd -g ${GROUP_ID} ${USERNAME}
 RUN useradd -l -u ${USER_ID} -g ${USERNAME} ${USERNAME}
 RUN chown -R "${USERNAME}" /usr/src/app/
-RUN usermod --home /tmp ${USERNAME} 
+RUN usermod --home /tmp ${USERNAME}
 
 USER "${USERNAME}"
 

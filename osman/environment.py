@@ -1,6 +1,4 @@
-"""
-Environment variables used by OsmanConfig
-"""
+"""Environment variables used by OsmanConfig."""
 OSMAN_ENVIRONMENT_VARS = [
     "OPENSEARCH_HOST",
     "OPENSEARCH_PORT",
