@@ -1,6 +1,5 @@
-"""
-Tests initialization and setup
-"""
+"""Tests initialization and setup."""
+
 import logging
 import os
 import sys
@@ -12,7 +11,7 @@ import pytest
 # We need to prevent initializing OsmanConfig class
 ORIG_SYS_PATH = sys.path.copy()
 sys.path.append(os.path.join(".", "osman"))
-from environment import OSMAN_ENVIRONMENT_VARS
+from environment import OSMAN_ENVIRONMENT_VARS  # noqa: E402
 
 sys.path = ORIG_SYS_PATH
 
@@ -21,9 +20,7 @@ OSMAN_ENV_VARS_SAVED = {}
 
 
 def pytest_sessionstart(session):
-    """
-    Initialize pytest, delete and save Osman's environment variables
-    """
+    """Initialize pytest, delete and save Osman's environment variables."""
     logging.info("Starting: '%s'", __file__)
 
     # The following can't be done through fixtures, it has to be called

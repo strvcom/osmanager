@@ -1,6 +1,4 @@
-"""
-Tests for OsmanConfig class
-"""
+"""Tests for OsmanConfig class."""
 import logging
 
 import pytest
@@ -60,9 +58,7 @@ from osman import OsmanConfig
 def test_creating_osman_config_by_host_url(
     _: str, host_url: str, expected: dict
 ):
-    """
-    Test OsmanConfig initialized by host url
-    """
+    """Test OsmanConfig initialized by host url."""
     config = OsmanConfig(host_url=host_url)
     for key, val in expected.items():
         assert config.__dict__[key] == val
@@ -137,12 +133,11 @@ def test_creating_osman_config_by_host_url(
         ),
     ]
 )
-def test_creating_osman_config_auth_method_url_par(
-    _: str, params: dict, expected: dict
-):
+def test_osman_config_auth_method_url_par(_: str, params: dict, expected: dict):
     """
-    Test OsmanConfig for different auth_methods initialized by host, port,
-    user, secret parameters
+    Test OsmanConfig for different auth_methods.
+
+    Initialized by host, port, user, secret parameters
     """
     config = OsmanConfig(**params)
     for key, val in expected.items():
@@ -152,12 +147,13 @@ def test_creating_osman_config_auth_method_url_par(
 def test_default_config_values():
     """
     Test OsmanConfig default values when environment variables don't exist.
+
     NOTE: The external environment variables are deleted in conftest.py
     during test init/collection phase.
     """
     with pytest.raises(AssertionError) as ex:
         OsmanConfig()
-    assert ex.match("auth_method wrong")
+        assert ex.match("auth_method wrong")
 
 
 # NOTE: We can't use 'parametrized.expand' here as 'parametrized' doesn't
@@ -231,9 +227,7 @@ def test_default_config_values():
 def test_config_values_from_environment(
     monkeypatch, test_case_name: str, env_vars: dict, expected: dict
 ):
-    """
-    Test OsmanConfig for setting corect attributes from environment variables.
-    """
+    """Test OsmanConfig for setting corect attributes from environment."""
     logging.info("Testcase: '%s'", test_case_name)
     # Create some OsmanConfig instance, it will be overwritten
     config = OsmanConfig(host_url="http://example.com")
@@ -242,6 +236,6 @@ def test_config_values_from_environment(
     for variable, val in env_vars.items():
         monkeypatch.setenv(variable, str(val))
 
-    config._reload_defaults_from_env()
-    for attribute, val in expected.items():
-        assert config.__dict__[attribute] == val
+    config._reload_defaults_from_env()  # noqa: WPS437
+    for attribute, attr_val in expected.items():
+        assert config.__dict__[attribute] == attr_val

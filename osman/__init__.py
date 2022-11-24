@@ -1,7 +1,4 @@
-"""
-osman package init
-"""
-from .config import OsmanConfig
-from .osman import Osman
-
-__version__ = "0.0.1"
+"""Osman package init."""
+# flake8: noqa
+from osman.config import OsmanConfig
+from osman.osman import Osman
