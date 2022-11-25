@@ -3,8 +3,10 @@ Osman -- OpenSearch Manager
 """
 import logging
 import uuid
+import os
+import json
 
-from opensearchpy import OpenSearch, RequestsHttpConnection, helpers
+from opensearchpy import OpenSearch, RequestsHttpConnection, helpers, exceptions
 from requests_aws4auth import AWS4Auth
 
 from .config import OsmanConfig
@@ -12,7 +14,7 @@ from .config import OsmanConfig
 
 class Osman:
     """
-    Generic OpenSearch helper class
+    Generic OpenSearch helper class.
 
     Attributes
     ----------
@@ -23,7 +25,7 @@ class Osman:
 
     def __init__(self, config: OsmanConfig = None):
         """
-        Init Osman
+        Init Osman.
 
         Parameters
         ----------
@@ -40,29 +42,31 @@ class Osman:
 
         os_params = {}
         if config.auth_method == "http":
-            logging.info("Initializing OpenSearch by 'http' auth method, "
-                "host: %s, port: %s",
-                {config.opensearch_host}, {config.opensearch_port}
+            logging.info(
+                "Initializing OpenSearch by 'http' auth method, " "host: %s, port: %s",
+                {config.opensearch_host},
+                {config.opensearch_port},
             )
 
             os_params["hosts"] = [config.host_url]
 
         elif config.auth_method == "awsauth":
-            logging.info("Initializing OpenSearch by 'awsauth' auth method, "
+            logging.info(
+                "Initializing OpenSearch by 'awsauth' auth method, "
                 "host: %s, port: %s",
-                {config.opensearch_host}, {config.opensearch_port}
+                {config.opensearch_host},
+                {config.opensearch_port},
             )
 
             os_params["http_auth"] = AWS4Auth(
-                    config.aws_access_key_id,
-                    config.aws_secret_access_key,
-                    config.aws_region,
-                    config.aws_service
-                )
-            os_params["hosts"] = [{
-                    "host": config.opensearch_host,
-                    "port": config.opensearch_port
-                }]
+                config.aws_access_key_id,
+                config.aws_secret_access_key,
+                config.aws_region,
+                config.aws_service,
+            )
+            os_params["hosts"] = [
+                {"host": config.opensearch_host, "port": config.opensearch_port}
+            ]
         else:
             # We should never get here
             assert False
@@ -82,7 +86,7 @@ class Osman:
 
     def create_index(self, name: str, mapping: dict = None) -> dict:
         """
-        Creates an index
+        Creates an index.
 
         Parameters
         ----------
@@ -99,7 +103,7 @@ class Osman:
 
     def delete_index(self, name: str) -> dict:
         """
-        Deletes an index
+        Deletes an index.
 
         Parameters
         ----------
@@ -116,7 +120,7 @@ class Osman:
 
     def index_exists(self, name: str) -> dict:
         """
-        Checks whether an index exists
+        Checks whether an index exists.
 
         Parameters
         ----------
@@ -133,7 +137,7 @@ class Osman:
 
     def search_index(self, name: str, search_query: dict) -> dict:
         """
-        Search the index with provided search query
+        Search the index with provided search query.
 
         Parameters
         ----------
@@ -148,15 +152,12 @@ class Osman:
             Dictionary with response
         """
 
-        return self.client.search(
-            body=search_query,
-            index=name
-        )
+        return self.client.search(body=search_query, index=name)
 
     @staticmethod
     def _bulk_json_data(index_name: str, documents: list, id_key: str = None):
         """
-        Helper method for add_data_to_index
+        Helper method for add_data_to_index.
 
         Parameters
         ----------
@@ -169,16 +170,17 @@ class Osman:
         """
         for doc in documents:
             index_id = doc[id_key] if id_key else uuid.uuid4()
-            yield {
-                "_index": index_name,
-                "_id": index_id,
-                "_source": doc
-            }
+            yield {"_index": index_name, "_id": index_id, "_source": doc}
 
-    def add_data_to_index(self, index_name: str, documents: list,
-        id_key: str = None, refresh: bool = False) -> dict:
+    def add_data_to_index(
+        self,
+        index_name: str,
+        documents: list,
+        id_key: str = None,
+        refresh: bool = False,
+    ) -> dict:
         """
-        Bulk insert data to index
+        Bulk insert data to index.
 
         Parameters
         ----------
@@ -203,9 +205,11 @@ class Osman:
         try:
             docs_inserted, _ = helpers.bulk(
                 self.client,
-                self._bulk_json_data(index_name=index_name,
-                    documents=documents, id_key=id_key),
-                refresh=refresh, stats_only=True
+                self._bulk_json_data(
+                    index_name=index_name, documents=documents, id_key=id_key
+                ),
+                refresh=refresh,
+                stats_only=True,
             )
         except Exception as exc:
             logging.debug("Failed: '%s'", exc)
@@ -214,5 +218,90 @@ class Osman:
         return {
             "acknowledged": True,
             "documents_inserted": docs_inserted,
-            "index": index_name
+            "index": index_name,
         }
+
+    @staticmethod
+    def _get_search_template_query(source: str, params: dict) -> str:
+        """Return query needed for calling search template.
+        Args:
+            source (str): search template script
+            params (dict): parameters of the search template
+        Returns:
+            str: search template query
+        """
+        return json.dumps({
+            "source": source,
+            "params": params
+        })
+
+    def upload_search_template(self, search_template: dict, config: dict) -> dict:
+        """
+        Upload search template
+
+        Parameters
+        ----------
+        search_template: dict
+            search template to upload
+        config: dict
+            search template config {name: template_name, parameters: {validation parameters}}
+
+        Returns
+        -------
+        dict
+            dictionary with response
+        """
+
+        search_template = {
+            "query": {"match" : {"age": "{{age}}"}}
+        }
+        
+        name = config["name"]
+        index = config["index"]
+
+        params = config.get("parameters", {})
+        query = self._get_search_template_query(search_template, params)
+
+        # run search template against the test data
+        result = self.client.search_template(body=query, index=index)
+
+        hits_cnt = len(result.get("hits").get("hits"))
+
+        assert hits_cnt >= 1, f"❌ Check failed!\n\n{query=}\n\n{result=}"
+
+        # upload search template
+        res = self.client.put_script(
+            id=name,
+            body={
+                "script": {
+                    "lang": "mustache",
+                    "source": search_template,
+                }
+            }
+        )
+        logging.info("✅ Template updated!")
+        return res
+
+    def delete_search_template(self, name: str) -> dict:
+        """
+        Upload search template
+
+        Parameters
+        ----------
+        name: str
+            name of search template
+            
+        Returns
+        -------
+        dict
+            Dictionary with response
+        """
+
+        try:
+            res = self.client.delete_script(id=name)
+        except exceptions.NotFoundError:
+            res = {'acknowledged': False}
+
+        return res
+        
+
