@@ -341,7 +341,6 @@ class TestTemplates:
 
         res = os_man.delete_search_template(template_name)
 
-
         assert res
         assert res["acknowledged"] is expected_ack
 
