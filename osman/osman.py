@@ -4,7 +4,10 @@ import logging
 import uuid
 
 from opensearchpy import (
-    OpenSearch, RequestsHttpConnection, exceptions, helpers
+    OpenSearch,
+    RequestsHttpConnection,
+    exceptions,
+    helpers,
 )
 from requests_aws4auth import AWS4Auth
 
