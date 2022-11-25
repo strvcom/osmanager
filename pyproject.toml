@@ -1,3 +1,7 @@
 [tool.black]
 line-length = 80
 extend-exclude = ['tmp/']
+
+[tool.isort]
+multi_line_output = 3
+include_trailing_comma = true

@@ -40,25 +40,6 @@ def _bulk_json_data(index_name: str, documents: list, id_key: str = None):
         yield {"_index": index_name, "_id": index_id, "_source": doc}
 
 
-def _get_search_template_query(search_template: dict, params: dict) -> str:
-    """
-    Format query for search template upload.
-
-    Parameters
-    ----------
-    search_template: dict
-        search template script
-    params: dict
-        parameters of the search template
-
-    Returns
-    -------
-    str
-        search template query
-    """
-    return json.dumps({"source": search_template, "params": params})
-
-
 class Osman(object):
     """
     Generic OpenSearch helper class.
@@ -260,40 +241,43 @@ class Osman(object):
         }
 
     def upload_search_template(
-        self, search_template: dict, config: dict
+        self, source: dict, name: str, index: str, params: dict
     ) -> dict:
         """
         Upload search template.
 
         Parameters
         ----------
-        search_template: dict
+        source: dict
             search template to upload
-        config: dict
-            search template config {name: template_name, parameters: {validation parameters}}
+        name: str
+            name of the search template
+        index: str
+            name of the index
+        params: dict
+            search template parameters {parameters: {validation parameters}
 
         Returns
         -------
         dict
             dictionary with response
         """
-        params = config.get("parameters", {})
-        query = _get_search_template_query(search_template, params)
+        query = json.dumps({"source": source, "params": params})
 
         # run search template against the test data
-        result = self.client.search_template(body=query, index=config["index"])
+        result = self.client.search_template(body=query, index=index)
 
-        hits_cnt = len(result.get("hits").get("hits"))
+        hits_cnt = len(result["hits"]["hits"])
 
         assert hits_cnt >= 1
 
         # upload search template
         res = self.client.put_script(
-            id=config["name"],
+            id=name,
             body={
                 "script": {
                     "lang": "mustache",
-                    "source": search_template,
+                    "source": source,
                 }
             },
         )

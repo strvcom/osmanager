@@ -239,22 +239,20 @@ def test_data_insert(index_handler, documents: list, id_key: str):
     [
         {
             "name": "test-template",
-            "parameters": {"from": 0, "size": 100, "age": 10},
+            "params": {"from": 0, "size": 100, "age": 10},
         }
     ],
 )
-@pytest.mark.parametrize(
-    "search_template", [{"query": {"match": {"age": "{{age}}"}}}]
-)
+@pytest.mark.parametrize("source", [{"query": {"match": {"age": "{{age}}"}}}])
 @pytest.mark.parametrize("id_key", ["id", None])
-class TestParametrized:
+class TestTemplates:
     def test_search_template_upload(
         self,
         index_handler,
         documents: list,
         id_key: str,
         config: dict,
-        search_template: dict,
+        source: dict,
     ):
         """
         Test uploading search template.
@@ -269,7 +267,7 @@ class TestParametrized:
             key in the document used for indexing
         config: dict
             search template config {name: template_name, parameters: {validation parameters}}
-        search_template: dict
+        source: dict
             search template to upload
         """
         os_man = OS_MAN
@@ -286,12 +284,15 @@ class TestParametrized:
             refresh=True,
         )
 
-        res = os_man.upload_search_template(search_template, config)
+        res = os_man.upload_search_template(
+            source, config["name"], index_name, config["params"]
+        )
         assert res
         assert res["acknowledged"]
 
     @pytest.mark.parametrize(
-        "template_name", ["test-template", "wrong-template-name"]
+        "template_name, expected_ack",
+        [("test-template", True), ("wrong-template-name", False)],
     )
     def test_search_template_delete(
         self,
@@ -299,8 +300,9 @@ class TestParametrized:
         documents: list,
         id_key: str,
         config: dict,
-        search_template: dict,
+        source: dict,
         template_name: str,
+        expected_ack: bool,
     ):
         """
         Test deleting search template.
@@ -315,7 +317,7 @@ class TestParametrized:
             key in the document used for indexing
         config: dict
             search template config {name: template_name, parameters: {validation parameters}}
-        search_template: dict
+        source: dict
             search template to upload
         template_name: str
             name of the template to be inserted
@@ -333,17 +335,18 @@ class TestParametrized:
             refresh=True,
         )
 
-        res = os_man.upload_search_template(search_template, config)
+        os_man.upload_search_template(
+            source, config["name"], index_name, config["params"]
+        )
 
-        template_name = config["name"]
         res = os_man.delete_search_template(template_name)
 
+        logging.info("start debug2")
+        logging.info(template_name)
         assert res
-
-        if template_name == "test-template":
-            assert res["acknowledged"]
-        else:
-            assert res["acknowledged"] is False
+        logging.info(res)
+        logging.info(expected_ack)
+        assert res["acknowledged"] is expected_ack
 
         assert (
             os_man.client.get_script(id=template_name, ignore=[400, 404])[
