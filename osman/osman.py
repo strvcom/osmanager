@@ -1,10 +1,11 @@
 """Osman -- OpenSearch Manager."""
+import json
 import logging
 import uuid
-import os
-import json
 
-from opensearchpy import OpenSearch, RequestsHttpConnection, helpers, exceptions
+from opensearchpy import (
+    OpenSearch, RequestsHttpConnection, exceptions, helpers
+)
 from requests_aws4auth import AWS4Auth
 
 from osman.config import OsmanConfig
@@ -34,6 +35,25 @@ def _bulk_json_data(index_name: str, documents: list, id_key: str = None):
     for doc in documents:
         index_id = doc[id_key] if id_key else uuid.uuid4()
         yield {"_index": index_name, "_id": index_id, "_source": doc}
+
+
+def _get_search_template_query(search_template: dict, params: dict) -> str:
+    """
+    Format query for search template upload.
+
+    Parameters
+    ----------
+    search_template: dict
+        search template script
+    params: dict
+        parameters of the search template
+
+    Returns
+    -------
+    str
+        search template query
+    """
+    return json.dumps({"source": search_template, "params": params})
 
 
 class Osman(object):
@@ -236,23 +256,11 @@ class Osman(object):
             "index": index_name,
         }
 
-    @staticmethod
-    def _get_search_template_query(source: str, params: dict) -> str:
-        """Return query needed for calling search template.
-        Args:
-            source (str): search template script
-            params (dict): parameters of the search template
-        Returns:
-            str: search template query
+    def upload_search_template(
+        self, search_template: dict, config: dict
+    ) -> dict:
         """
-        return json.dumps({
-            "source": source,
-            "params": params
-        })
-
-    def upload_search_template(self, search_template: dict, config: dict) -> dict:
-        """
-        Upload search template
+        Upload search template.
 
         Parameters
         ----------
@@ -266,57 +274,46 @@ class Osman(object):
         dict
             dictionary with response
         """
-
-        search_template = {
-            "query": {"match" : {"age": "{{age}}"}}
-        }
-        
-        name = config["name"]
-        index = config["index"]
-
         params = config.get("parameters", {})
-        query = self._get_search_template_query(search_template, params)
+        query = _get_search_template_query(search_template, params)
 
         # run search template against the test data
-        result = self.client.search_template(body=query, index=index)
+        result = self.client.search_template(body=query, index=config["index"])
 
         hits_cnt = len(result.get("hits").get("hits"))
 
-        assert hits_cnt >= 1, f"❌ Check failed!\n\n{query=}\n\n{result=}"
+        assert hits_cnt >= 1
 
         # upload search template
         res = self.client.put_script(
-            id=name,
+            id=config["name"],
             body={
                 "script": {
                     "lang": "mustache",
                     "source": search_template,
                 }
-            }
+            },
         )
-        logging.info("✅ Template updated!")
+        logging.info("Template updated!")
         return res
 
     def delete_search_template(self, name: str) -> dict:
         """
-        Upload search template
+        Delete search template.
 
         Parameters
         ----------
         name: str
             name of search template
-            
+
         Returns
         -------
         dict
             Dictionary with response
         """
-
         try:
             res = self.client.delete_script(id=name)
         except exceptions.NotFoundError:
-            res = {'acknowledged': False}
+            res = {"acknowledged": False}
 
         return res
-        
-

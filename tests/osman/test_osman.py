@@ -150,12 +150,12 @@ def test_index_manipulation(random_index_name):
 def test_index_exists(index_handler):
     """
     Test index_exists methods.
+
     Parameters
     ----------
     index_handler
         index_handler fixture, returning the name of the index for testing
     """
-
     os_man = OS_MAN
     index_name = index_handler
     assert os_man.index_exists(index_name)
@@ -232,37 +232,29 @@ def test_data_insert(index_handler, documents: list, id_key: str):
             {"age": 45, "id": 49, "name": "fred"},
             {"age": 10, "id": 10, "name": "carlos"},
         ]
-       
-    ]
+    ],
 )
 @pytest.mark.parametrize(
     "config",
-    [  
+    [
         {
             "name": "test-template",
             "parameters": {"from": 0, "size": 100, "age": 10},
         }
-    ]
+    ],
 )
 @pytest.mark.parametrize(
-    "search_template",
-    [
-        {
-            "query": {"match" : {"age": "{{age}}"}}
-        }
-    ]
+    "search_template", [{"query": {"match": {"age": "{{age}}"}}}]
 )
 @pytest.mark.parametrize("id_key", ["id", None])
 class TestParametrized:
-
-
     def test_search_template_upload(
         self,
         index_handler,
         documents: list,
         id_key: str,
-        config:dict,
-        search_template: dict
+        config: dict,
+        search_template: dict,
     ):
         """
         Test uploading search template.
@@ -280,18 +272,18 @@ class TestParametrized:
         search_template: dict
             search template to upload
         """
-
         os_man = OS_MAN
 
         index_name = index_handler
 
-        config.update(
-            {"index": index_name}
-        )
+        config.update({"index": index_name})
 
         # Put refresh to True for immediate results
         os_man.add_data_to_index(
-            index_name=index_name, documents=documents, id_key=id_key, refresh=True
+            index_name=index_name,
+            documents=documents,
+            id_key=id_key,
+            refresh=True,
         )
 
         res = os_man.upload_search_template(search_template, config)
@@ -306,9 +298,9 @@ class TestParametrized:
         index_handler,
         documents: list,
         id_key: str,
-        config:dict,
+        config: dict,
         search_template: dict,
-        template_name: str 
+        template_name: str,
     ):
         """
         Test deleting search template.
@@ -328,17 +320,17 @@ class TestParametrized:
         template_name: str
             name of the template to be inserted
         """
-
         os_man = OS_MAN
         index_name = index_handler
 
-        config.update(
-            {"index": index_name}
-        )
+        config.update({"index": index_name})
 
         # Put refresh to True for immediate results
         os_man.add_data_to_index(
-            index_name=index_name, documents=documents, id_key=id_key, refresh=True
+            index_name=index_name,
+            documents=documents,
+            id_key=id_key,
+            refresh=True,
         )
 
         res = os_man.upload_search_template(search_template, config)
@@ -351,8 +343,11 @@ class TestParametrized:
         if template_name == "test-template":
             assert res["acknowledged"]
         else:
-            assert res["acknowledged"] == False
+            assert res["acknowledged"] is False
 
-        assert os_man.client.get_script(id=template_name, ignore=[400, 404])["found"] is False
-
-
+        assert (
+            os_man.client.get_script(id=template_name, ignore=[400, 404])[
+                "found"
+            ]
+            is False
+        )

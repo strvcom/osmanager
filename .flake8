@@ -66,6 +66,11 @@ ignore =
     # Various WPS refactor heavy warnings to ignore that currently have a poor risk/reward tradeoff.
     WPS111
     WPS407
+    # too many methods in class
+    WPS214
+    # class without base class
+    WPS306
+
 
 exclude =
     .venv
