@@ -341,11 +341,8 @@ class TestTemplates:
 
         res = os_man.delete_search_template(template_name)
 
-        logging.info("start debug2")
-        logging.info(template_name)
+
         assert res
-        logging.info(res)
-        logging.info(expected_ack)
         assert res["acknowledged"] is expected_ack
 
         assert (
