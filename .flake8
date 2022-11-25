@@ -55,30 +55,17 @@ ignore =
     WPS212
     # Allow f-strings
     WPS305
+    # FIXME Allow '%' string formatting, for logging strings
+    # https://github.com/wemake-services/wemake-python-styleguide/issues/1304
+    WPS323
+    # Ignore 'too many public instance attributes'
+    # https://github.com/wemake-services/wemake-python-styleguide/issues/2448
+    WPS230
+    # Ignore too many `assert` statements
+    WPS218
     # Various WPS refactor heavy warnings to ignore that currently have a poor risk/reward tradeoff.
-    WPS100
     WPS111
-    WPS112
-    WPS201
-    WPS220
-    WPS221
-    WPS226
-    WPS229
-    WPS231
-    WPS232
-    WPS237
-    WPS316
-    WPS337
-    WPS352
-    WPS404
     WPS407
-    WPS412
-    WPS429
-    WPS430
-    WPS433
-    WPS454
-    WPS501
-    WPS507
 
 exclude =
     .venv
@@ -104,3 +91,5 @@ per-file-ignores =
         D104
         D105
         D107
+        # String literal overuse
+        WPS226

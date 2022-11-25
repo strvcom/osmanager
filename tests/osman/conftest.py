@@ -1,30 +1,33 @@
-"""
-Osman instance test configuration and setup
-"""
-import time
+"""Osman instance test configuration and setup."""
 import logging
+import time
+
 import pytest
 
+
 def get_random_index_name(prefix: str) -> str:
-    """
-    Return a random index name
-    """
-    return f"{prefix}_{int(time.time()*1_000_000)}"
+    """Return a random index name."""
+    suffix_time = int(time.time() * 1000000)  # noqa: WPS432
+    return f"{prefix}_{suffix_time}"
+
 
 @pytest.fixture
 def random_index_name(request: pytest.FixtureRequest):
     """
-    Fixture for getting random index name. Usefull when testing
-    manual index manipulation
+    Fixture for getting random index name.
+
+    Usefull when testing manual index manipulation.
     """
     return get_random_index_name(request.function.__name__)
+
 
 @pytest.fixture
 def index_handler(request: pytest.FixtureRequest):
     """
-    Creates new index, yields index name to test case so it can use it
-    and after the test is done deletes the index.
-    Expects the following params in 'request':
+    Create new index with random name.
+
+    Yields index name to test case so it can use it and after the test is done
+    deletes the index.  Expects the following params in 'request':
     os_man: Osman
         Osman instance
     mapping: dict

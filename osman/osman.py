@@ -1,6 +1,4 @@
-"""
-Osman -- OpenSearch Manager
-"""
+"""Osman -- OpenSearch Manager."""
 import logging
 import uuid
 import os
@@ -9,10 +7,36 @@ import json
 from opensearchpy import OpenSearch, RequestsHttpConnection, helpers, exceptions
 from requests_aws4auth import AWS4Auth
 
-from .config import OsmanConfig
+from osman.config import OsmanConfig
 
 
-class Osman:
+def _bulk_json_data(index_name: str, documents: list, id_key: str = None):
+    """
+    Generate data dictionary.
+
+    Helper method for add_data_to_index.
+
+    Parameters
+    ----------
+    index_name: str
+        name of the index
+    documents: list
+        iterable yielding documents. TODO iterable instead of list?
+    id_key: str
+        key from a document used for indexing or None
+
+    Yields
+    ------
+    dict
+        dictionary with _index (index_name), _id (generated id),
+            _source (one document)
+    """
+    for doc in documents:
+        index_id = doc[id_key] if id_key else uuid.uuid4()
+        yield {"_index": index_name, "_id": index_id, "_source": doc}
+
+
+class Osman(object):
     """
     Generic OpenSearch helper class.
 
@@ -20,7 +44,6 @@ class Osman:
     ----------
     client: OpenSearch
         OpenSearch initialized client
-
     """
 
     def __init__(self, config: OsmanConfig = None):
@@ -31,8 +54,15 @@ class Osman:
         ----------
         config: OsmanConfig
             Configuration params (url, ...) of the OpenSearch instance
-        """
 
+        Raises
+        ------
+        AssertionError
+            in case of malformed config.auth_method
+        Exception
+            re-raises exception when self.client.cluster.get_settings()
+            is not succesful.
+        """
         if not config:
             logging.info("No config provided, using a default one")
             config = OsmanConfig(host_url="http://opensearch-node:9200")
@@ -43,7 +73,8 @@ class Osman:
         os_params = {}
         if config.auth_method == "http":
             logging.info(
-                "Initializing OpenSearch by 'http' auth method, " "host: %s, port: %s",
+                "Initializing OpenSearch by 'http' auth method, "
+                + "host: %s, port: %s",
                 {config.opensearch_host},
                 {config.opensearch_port},
             )
@@ -53,7 +84,7 @@ class Osman:
         elif config.auth_method == "awsauth":
             logging.info(
                 "Initializing OpenSearch by 'awsauth' auth method, "
-                "host: %s, port: %s",
+                + "host: %s, port: %s",
                 {config.opensearch_host},
                 {config.opensearch_port},
             )
@@ -69,16 +100,16 @@ class Osman:
             ]
         else:
             # We should never get here
-            assert False
+            raise AssertionError()
 
         os_params["use_ssl"] = config.opensearch_ssl_enabled
         os_params["http_compress"] = True
         os_params["connection_class"] = RequestsHttpConnection
         self.client = OpenSearch(**os_params)
 
+        # Test the connection
+        logging.info("Getting cluster settings")
         try:
-            # Test the connection
-            logging.info("Getting cluster settings")
             self.client.cluster.get_settings()
         except Exception:
             logging.error("Getting cluster settings failed")
@@ -86,24 +117,25 @@ class Osman:
 
     def create_index(self, name: str, mapping: dict = None) -> dict:
         """
-        Creates an index.
+        Create an index.
 
         Parameters
         ----------
         name: str
             The name of the index
+        mapping: dict
+            Index mapping
 
         Returns
         -------
         dict
             Dictionary with response
         """
-
         return self.client.indices.create(index=name, body=mapping)
 
     def delete_index(self, name: str) -> dict:
         """
-        Deletes an index.
+        Delete an index.
 
         Parameters
         ----------
@@ -115,12 +147,11 @@ class Osman:
         dict
             Dictionary with response
         """
-
         return self.client.indices.delete(index=name)
 
     def index_exists(self, name: str) -> dict:
         """
-        Checks whether an index exists.
+        Check whether an index exists.
 
         Parameters
         ----------
@@ -132,7 +163,6 @@ class Osman:
         dict
             Dictionary with response
         """
-
         return self.client.indices.exists(index=name)
 
     def search_index(self, name: str, search_query: dict) -> dict:
@@ -143,7 +173,7 @@ class Osman:
         ----------
         name: str
             The name of the index
-        search_string: dict
+        search_query: dict
             Search query as dictionary {'query': {....}}
 
         Returns
@@ -151,26 +181,7 @@ class Osman:
         dict
             Dictionary with response
         """
-
         return self.client.search(body=search_query, index=name)
-
-    @staticmethod
-    def _bulk_json_data(index_name: str, documents: list, id_key: str = None):
-        """
-        Helper method for add_data_to_index.
-
-        Parameters
-        ----------
-        index_name: str
-            name of the index
-        documents:
-            iterable yielding documents
-        id_key:
-            key from a document used for indexing or None
-        """
-        for doc in documents:
-            index_id = doc[id_key] if id_key else uuid.uuid4()
-            yield {"_index": index_name, "_id": index_id, "_source": doc}
 
     def add_data_to_index(
         self,
@@ -186,7 +197,7 @@ class Osman:
         ----------
         index_name: str
             Name of the index
-        documents: json
+        documents: list
             Documents in the following format: [{document}, {document}, ...]
         id_key: str
             Key from the document used as id for indexing. If None uuid4
@@ -199,13 +210,17 @@ class Osman:
         -------
         dict
             Dictionary with response
-        """
 
+        Raises
+        ------
+        RuntimeError
+            if the helpers.bul call fails.
+        """
         logging.info("Creating data in index '%s'...", index_name)
         try:
             docs_inserted, _ = helpers.bulk(
                 self.client,
-                self._bulk_json_data(
+                _bulk_json_data(
                     index_name=index_name, documents=documents, id_key=id_key
                 ),
                 refresh=refresh,
