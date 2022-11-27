@@ -68,9 +68,6 @@ ignore =
     WPS407
     # too many methods in class
     WPS214
-    # class without base class
-    WPS306
-
 
 exclude =
     .venv

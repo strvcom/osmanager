@@ -245,7 +245,7 @@ def test_data_insert(index_handler, documents: list, id_key: str):
 )
 @pytest.mark.parametrize("source", [{"query": {"match": {"age": "{{age}}"}}}])
 @pytest.mark.parametrize("id_key", ["id", None])
-class TestTemplates:
+class TestTemplates(object):
     def test_search_template_upload(
         self,
         index_handler,
