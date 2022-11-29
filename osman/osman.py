@@ -1,8 +1,14 @@
 """Osman -- OpenSearch Manager."""
+import json
 import logging
 import uuid
 
-from opensearchpy import OpenSearch, RequestsHttpConnection, helpers
+from opensearchpy import (
+    OpenSearch,
+    RequestsHttpConnection,
+    exceptions,
+    helpers,
+)
 from requests_aws4auth import AWS4Auth
 
 from osman.config import OsmanConfig
@@ -233,3 +239,68 @@ class Osman(object):
             "documents_inserted": docs_inserted,
             "index": index_name,
         }
+
+    def upload_search_template(
+        self, source: dict, name: str, index: str, params: dict
+    ) -> dict:
+        """
+        Upload search template.
+
+        Parameters
+        ----------
+        source: dict
+            search template to upload
+        name: str
+            name of the search template
+        index: str
+            name of the index
+        params: dict
+            search template parameters {parameters: {validation parameters}
+
+        Returns
+        -------
+        dict
+            dictionary with response
+        """
+        query = json.dumps({"source": source, "params": params})
+
+        # run search template against the test data
+        result = self.client.search_template(body=query, index=index)
+
+        hits_cnt = len(result["hits"]["hits"])
+
+        assert hits_cnt >= 1
+
+        # upload search template
+        res = self.client.put_script(
+            id=name,
+            body={
+                "script": {
+                    "lang": "mustache",
+                    "source": source,
+                }
+            },
+        )
+        logging.info("Template updated!")
+        return res
+
+    def delete_search_template(self, name: str) -> dict:
+        """
+        Delete search template.
+
+        Parameters
+        ----------
+        name: str
+            name of search template
+
+        Returns
+        -------
+        dict
+            Dictionary with response
+        """
+        try:
+            res = self.client.delete_script(id=name)
+        except exceptions.NotFoundError:
+            res = {"acknowledged": False}
+
+        return res

@@ -220,3 +220,133 @@ def test_data_insert(index_handler, documents: list, id_key: str):
         ][0]
 
         assert document == os_document
+
+
+@pytest.mark.parametrize(**INDEX_HANDLER_FIXTURE_PARAMS)
+@pytest.mark.parametrize(
+    "documents",
+    [
+        [
+            {"age": 10, "id": 123, "name": "james"},
+            {"age": 23, "id": 456, "name": "lordos"},
+            {"age": 45, "id": 49, "name": "fred"},
+            {"age": 10, "id": 10, "name": "carlos"},
+        ]
+    ],
+)
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "name": "test-template",
+            "params": {"from": 0, "size": 100, "age": 10},
+        }
+    ],
+)
+@pytest.mark.parametrize("source", [{"query": {"match": {"age": "{{age}}"}}}])
+@pytest.mark.parametrize("id_key", ["id", None])
+class TestTemplates(object):
+    def test_search_template_upload(
+        self,
+        index_handler,
+        documents: list,
+        id_key: str,
+        config: dict,
+        source: dict,
+    ):
+        """
+        Test uploading search template.
+
+        Parameters
+        ----------
+        index_handler
+            index_handler fixture, returning the name of the index for testing
+        documents: list
+            list of documents [{document}, {document}, ...]
+        id_key: str
+            key in the document used for indexing
+        config: dict
+            search template config {name: template_name, parameters: {validation parameters}}
+        source: dict
+            search template to upload
+        """
+        os_man = OS_MAN
+
+        index_name = index_handler
+
+        config.update({"index": index_name})
+
+        # Put refresh to True for immediate results
+        os_man.add_data_to_index(
+            index_name=index_name,
+            documents=documents,
+            id_key=id_key,
+            refresh=True,
+        )
+
+        res = os_man.upload_search_template(
+            source, config["name"], index_name, config["params"]
+        )
+        assert res
+        assert res["acknowledged"]
+
+    @pytest.mark.parametrize(
+        "template_name, expected_ack",
+        [("test-template", True), ("wrong-template-name", False)],
+    )
+    def test_search_template_delete(
+        self,
+        index_handler,
+        documents: list,
+        id_key: str,
+        config: dict,
+        source: dict,
+        template_name: str,
+        expected_ack: bool,
+    ):
+        """
+        Test deleting search template.
+
+        Parameters
+        ----------
+        index_handler
+            index_handler fixture, returning the name of the index for testing
+        documents: list
+            list of documents [{document}, {document}, ...]
+        id_key: str
+            key in the document used for indexing
+        config: dict
+            search template config {name: template_name, parameters: {validation parameters}}
+        source: dict
+            search template to upload
+        template_name: str
+            name of the template to be inserted
+        """
+        os_man = OS_MAN
+        index_name = index_handler
+
+        config.update({"index": index_name})
+
+        # Put refresh to True for immediate results
+        os_man.add_data_to_index(
+            index_name=index_name,
+            documents=documents,
+            id_key=id_key,
+            refresh=True,
+        )
+
+        os_man.upload_search_template(
+            source, config["name"], index_name, config["params"]
+        )
+
+        res = os_man.delete_search_template(template_name)
+
+        assert res
+        assert res["acknowledged"] is expected_ack
+
+        assert (
+            os_man.client.get_script(id=template_name, ignore=[400, 404])[
+                "found"
+            ]
+            is False
+        )
