@@ -3,12 +3,8 @@ import json
 import logging
 import uuid
 
-from opensearchpy import (
-    OpenSearch,
-    RequestsHttpConnection,
-    exceptions,
-    helpers,
-)
+import deepdiff
+from opensearchpy import OpenSearch, RequestsHttpConnection, exceptions, helpers
 from requests_aws4auth import AWS4Auth
 
 from osman.config import OsmanConfig
@@ -38,6 +34,37 @@ def _bulk_json_data(index_name: str, documents: list, id_key: str = None):
     for doc in documents:
         index_id = doc[id_key] if id_key else uuid.uuid4()
         yield {"_index": index_name, "_id": index_id, "_source": doc}
+
+
+def _compare_scripts(script_local: str, script_os: str) -> dict:
+    """
+    Compare two scripts and return the differences.
+
+    Helper method for upload_search_template.
+
+    Parameters
+    ----------
+    script_local: str
+        json string of the local script
+    script_os: str
+        json string of the script in os
+
+    Returns
+    ------
+    dict
+        dictionary containing the differences between the two scripts
+
+    """
+    script_local = json.loads(script_local)
+    script_os = json.loads(script_os)
+
+    if script_local == script_os:
+        logging.info("Local script and OS script are equal.")
+        return None
+
+    diff = deepdiff.DeepDiff(script_local, script_os)
+    logging.info("Local script and OS script are not equal.")
+    return diff
 
 
 class Osman(object):
@@ -244,7 +271,7 @@ class Osman(object):
         self, source: dict, name: str, index: str, params: dict
     ) -> dict:
         """
-        Upload search template.
+        Upload (or update) search template.
 
         Parameters
         ----------
@@ -271,6 +298,19 @@ class Osman(object):
 
         assert hits_cnt >= 1
 
+        # check if script already exists in os
+        script_os_res = self.client.get_script(id=name, ignore=[400, 404])
+
+        # if script ecists in os, compare it with the local script
+        if script_os_res["found"]:
+            diffs = _compare_scripts(
+                json.dumps(source), script_os_res["script"]["source"]
+            )
+            if diffs is None:
+                return {"acknowledged": False}
+        else:
+            diffs = None
+
         # upload search template
         res = self.client.put_script(
             id=name,
@@ -281,6 +321,9 @@ class Osman(object):
                 }
             },
         )
+
+        if diffs:
+            res.update({"differences": diffs})
         logging.info("Template updated!")
         return res
 

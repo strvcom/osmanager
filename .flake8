@@ -68,7 +68,8 @@ ignore =
     WPS407
     # too many methods in class
     WPS214
-
+    # too many local variables
+    WPS210
 exclude =
     .venv
     venv

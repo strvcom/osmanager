@@ -244,13 +244,11 @@ def test_data_insert(index_handler, documents: list, id_key: str):
     ],
 )
 @pytest.mark.parametrize("source", [{"query": {"match": {"age": "{{age}}"}}}])
-@pytest.mark.parametrize("id_key", ["id", None])
 class TestTemplates(object):
     def test_search_template_upload(
         self,
         index_handler,
         documents: list,
-        id_key: str,
         config: dict,
         source: dict,
     ):
@@ -263,8 +261,6 @@ class TestTemplates(object):
             index_handler fixture, returning the name of the index for testing
         documents: list
             list of documents [{document}, {document}, ...]
-        id_key: str
-            key in the document used for indexing
         config: dict
             search template config {name: template_name, parameters: {validation parameters}}
         source: dict
@@ -280,15 +276,19 @@ class TestTemplates(object):
         os_man.add_data_to_index(
             index_name=index_name,
             documents=documents,
-            id_key=id_key,
+            id_key="id",
             refresh=True,
         )
 
         res = os_man.upload_search_template(
             source, config["name"], index_name, config["params"]
         )
+
         assert res
         assert res["acknowledged"]
+
+        # delete script so it doesnt linger around
+        os_man.client.delete_script(config["name"])
 
     @pytest.mark.parametrize(
         "template_name, expected_ack",
@@ -298,7 +298,6 @@ class TestTemplates(object):
         self,
         index_handler,
         documents: list,
-        id_key: str,
         config: dict,
         source: dict,
         template_name: str,
@@ -313,8 +312,6 @@ class TestTemplates(object):
             index_handler fixture, returning the name of the index for testing
         documents: list
             list of documents [{document}, {document}, ...]
-        id_key: str
-            key in the document used for indexing
         config: dict
             search template config {name: template_name, parameters: {validation parameters}}
         source: dict
@@ -331,7 +328,7 @@ class TestTemplates(object):
         os_man.add_data_to_index(
             index_name=index_name,
             documents=documents,
-            id_key=id_key,
+            id_key="id",
             refresh=True,
         )
 
@@ -350,3 +347,83 @@ class TestTemplates(object):
             ]
             is False
         )
+
+    @pytest.mark.parametrize(
+        "local_source, expected_ack, expected_differences",
+        [
+            ({"query": {"match": {"age": "{{age}}"}}}, False, []),
+            (
+                {
+                    "query": {
+                        "bool": {"must_not": [{"match": {"age": "{{age}}"}}]}
+                    }
+                },
+                True,
+                ["[root['query']['match']]", "[root['query']['bool']]"],
+            ),
+        ],
+    )
+    def test_template_comparison(
+        self,
+        index_handler,
+        documents: list,
+        config: dict,
+        source: dict,
+        local_source: dict,
+        expected_ack: bool,
+        expected_differences: list,
+    ):
+        """
+        Test update of search template (comparison local vs os).
+
+        Parameters
+        ----------
+        index_handler
+            index_handler fixture, returning the name of the index for testing
+        documents: list
+            list of documents [{document}, {document}, ...]
+        config: dict
+            search template config {name: template_name, parameters: {validation parameters}}
+        source: dict
+            source to upload
+        local_source: dict
+            second source to update 'source' with
+        expected_ack: bool
+            expected response when updating 'source'
+        expected_differences: list
+            expected differences when updating 'source'
+        """
+        os_man = OS_MAN
+        index_name = index_handler
+
+        config.update({"index": index_name})
+
+        # Put refresh to True for immediate results
+        os_man.add_data_to_index(
+            index_name=index_name,
+            documents=documents,
+            id_key="id",
+            refresh=True,
+        )
+
+        os_man.upload_search_template(
+            source, config["name"], index_name, config["params"]
+        )
+
+        res = os_man.upload_search_template(
+            local_source, config["name"], index_name, config["params"]
+        )
+
+        assert res["acknowledged"] == expected_ack
+
+        # when differences are present, test if correct
+        if "differences" in res:
+
+            assert (
+                str(res.get("differences", {}).get("dictionary_item_added"))
+                == expected_differences[0]
+            )
+            assert (
+                str(res.get("differences", {}).get("dictionary_item_removed"))
+                == expected_differences[1]
+            )
