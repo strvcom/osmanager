@@ -323,7 +323,7 @@ class Osman(object):
         )
 
         if diffs:
-            res.update({"differences": diffs})
+            res["differences"] = diffs
         logging.info("Template updated!")
         return res
 

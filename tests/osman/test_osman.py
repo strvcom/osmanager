@@ -322,7 +322,7 @@ class TestTemplates(object):
         os_man = OS_MAN
         index_name = index_handler
 
-        config.update({"index": index_name})
+        config["index"] = index_name
 
         # Put refresh to True for immediate results
         os_man.add_data_to_index(
