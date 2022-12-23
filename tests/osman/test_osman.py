@@ -1,7 +1,7 @@
 """Test Osman class initialization."""
+import json
 import logging
 import os
-import json
 from dataclasses import dataclass
 
 import pytest
@@ -28,7 +28,7 @@ INDEX_MAPPING = {
             "age": {"type": "integer"},
             "id": {"type": "integer"},
             "name": {"type": "text"},
-            "container" : {"type": "integer"}
+            "container": {"type": "integer"},
         }
     }
 }
@@ -430,17 +430,14 @@ class TestTemplates(object):
                 == expected_differences[1]
             )
 
+
 @pytest.mark.parametrize(**INDEX_HANDLER_FIXTURE_PARAMS)
 @pytest.mark.parametrize(
     "documents",
-    [
-        [
-            {"id": 1, "container": [1, 2, 3]}
-        ]
-    ],
+    [[{"id": 1, "container": [1, 2, 3]}]],
 )
 @pytest.mark.parametrize(
-    "source , params, context_type, expected_ack",
+    "source , params, context_type, expected",
     [
         (
             """
@@ -453,7 +450,7 @@ class TestTemplates(object):
             """,
             {"params": {"multiplier": 2}},
             "score",
-            12
+            12,
         ),
         (
             """
@@ -470,7 +467,7 @@ class TestTemplates(object):
             """,
             {"params": {"multiplier": 1}},
             "filter",
-            0
+            0,
         ),
         (
             """
@@ -487,10 +484,9 @@ class TestTemplates(object):
             """,
             {"params": {"multiplier": 3}},
             "filter",
-            1
-        )
-    ], 
-
+            1,
+        ),
+    ],
 )
 class TestPainlessScripts(object):
     def test_painless_script_upload(
@@ -500,7 +496,7 @@ class TestPainlessScripts(object):
         source: dict,
         params: dict,
         context_type: str,
-        expected: int
+        expected: int,
     ):
         """
         Test uploading search template.
@@ -517,14 +513,14 @@ class TestPainlessScripts(object):
             parameters to pass to painless script
         context_type: str
             context type of the painless script, should be in {'filter', 'score'}
-        expacted: int
+        expected: int
             expected return from painless script
         """
         os_man = OS_MAN
         index_name = index_handler
 
-        SCRIPT_NAME = "test_script" 
-        
+        script_name = "test_script"
+
         # create a json to test painless functionality
         body_painless_test = json.dumps(
             {
@@ -532,17 +528,19 @@ class TestPainlessScripts(object):
                 "context": context_type,
                 "context_setup": {
                     "index": index_name,
-                    "document": documents[0]
-                }
+                    "document": documents[0],
+                },
             }
-        )   
+        )
 
         # send API request to test validity of painless script
-        res_painless = os_man.client.scripts_painless_execute(body=body_painless_test)
+        res_painless = os_man.client.scripts_painless_execute(
+            body=body_painless_test
+        )
 
         logging.info(res_painless["result"])
 
-        assert res_painless["result"] == expected_ack
+        assert res_painless["result"] == expected
 
         # Put refresh to True for immediate results
         os_man.add_data_to_index(
@@ -552,10 +550,10 @@ class TestPainlessScripts(object):
             refresh=True,
         )
 
-        res = os_man.upload_painless_script(source, SCRIPT_NAME)
+        res = os_man.upload_painless_script(source, script_name)
 
         assert res
         assert res["acknowledged"]
 
         # delete script so it doesnt linger around
-        os_man.client.delete_script(SCRIPT_NAME)
+        os_man.client.delete_script(script_name)

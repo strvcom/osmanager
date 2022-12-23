@@ -267,41 +267,6 @@ class Osman(object):
             "index": index_name,
         }
 
-    def _os_script_check(self, source: dict, name: str):
-        """
-        Compare script in OS with local file.
-
-        Parameters
-        ----------
-        source: dict
-            script in json format
-        name: str
-            name of script
-
-        Returns
-        ------
-        dict
-            dictionary containing the differences between the two scripts
-        """
-
-        # check if script already exists in os
-        script_os_res = self.client.get_script(id=name, ignore=[400, 404])
-
-        # if script ecists in os, compare it with the local script
-        if script_os_res["found"]:
-
-            script_os = script_os_res["script"]
-            if 'source' in script_os:
-                script_os = script_os["source"]
-
-            diffs = _compare_scripts(
-                json.dumps(source), script_os
-            )
-        else:
-            diffs = source
-        
-        return diffs
-
     def upload_search_template(
         self, source: dict, name: str, index: str, params: dict
     ) -> dict:
@@ -347,7 +312,7 @@ class Osman(object):
                     "lang": "mustache",
                     "source": source,
                 }
-            }
+            },
         )
 
         if diffs:
@@ -376,11 +341,9 @@ class Osman(object):
 
         return res
 
-    def upload_painless_script(
-        self, source: dict, name: str
-    ) -> dict:
+    def upload_painless_script(self, source: dict, name: str) -> dict:
         """
-        Upload (or update) painless script
+        Upload (or update) painless script.
 
         Parameters
         ----------
@@ -401,14 +364,44 @@ class Osman(object):
             return {"acknowledged": False}
 
         # upload script
-        res = self.client.put_script(
+        return self.client.put_script(
             id=name,
             body={
                 "script": {
                     "lang": "painless",
                     "source": source,
                 }
-            }
+            },
         )
 
-        return res
+    def _os_script_check(self, source: dict, name: str):
+        """
+        Compare script in OS with local file.
+
+        Parameters
+        ----------
+        source: dict
+            script in json format
+        name: str
+            name of script
+
+        Returns
+        ------
+        dict
+            dictionary containing the differences between the two scripts
+        """
+        # check if script already exists in os
+        script_os_res = self.client.get_script(id=name, ignore=[400, 404])
+
+        # if script ecists in os, compare it with the local script
+        if script_os_res["found"]:
+
+            script_os = script_os_res["script"]
+            if "source" in script_os:
+                script_os = script_os.get("source")
+
+            diffs = _compare_scripts(json.dumps(source), script_os)
+        else:
+            diffs = source
+
+        return diffs
