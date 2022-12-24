@@ -24,7 +24,6 @@ def _bulk_json_data(index_name: str, documents: list, id_key: str = None):
         iterable yielding documents. TODO iterable instead of list?
     id_key: str
         key from a document used for indexing or None
-
     Yields
     ------
     dict
@@ -48,12 +47,10 @@ def _compare_scripts(script_local: str, script_os: str) -> dict:
         json string of the local script
     script_os: str
         json string of the script in os
-
     Returns
     ------
     dict
         dictionary containing the differences between the two scripts
-
     """
     script_local = json.loads(script_local)
     script_os = json.loads(script_os)
@@ -85,7 +82,6 @@ class Osman(object):
         ----------
         config: OsmanConfig
             Configuration params (url, ...) of the OpenSearch instance
-
         Raises
         ------
         AssertionError
@@ -156,7 +152,6 @@ class Osman(object):
             The name of the index
         mapping: dict
             Index mapping
-
         Returns
         -------
         dict
@@ -172,7 +167,6 @@ class Osman(object):
         ----------
         name: str
             The name of the index
-
         Returns
         -------
         dict
@@ -188,7 +182,6 @@ class Osman(object):
         ----------
         name: str
             The name of the index
-
         Returns
         -------
         dict
@@ -206,7 +199,6 @@ class Osman(object):
             The name of the index
         search_query: dict
             Search query as dictionary {'query': {....}}
-
         Returns
         -------
         dict
@@ -236,12 +228,10 @@ class Osman(object):
         refresh: bool
             Should the shards in OS refresh automatically?
             True hurts the cluster performance
-
         Returns
         -------
         dict
             Dictionary with response
-
         Raises
         ------
         RuntimeError
@@ -283,7 +273,6 @@ class Osman(object):
             name of the index
         params: dict
             search template parameters {parameters: {validation parameters}
-
         Returns
         -------
         dict
@@ -299,7 +288,16 @@ class Osman(object):
         assert hits_cnt >= 1
 
         # check if script already exists in os
-        diffs = self._os_script_check(source, name)
+        script_os_res = self.client.get_script(id=name, ignore=[400, 404])
+
+        # if script ecists in os, compare it with the local script
+        if script_os_res["found"]:
+
+            diffs = _compare_scripts(
+                json.dumps(source), script_os_res["script"]["source"]
+            )
+        else:
+            diffs = source
 
         if diffs is None:
             return {"acknowledged": False}
@@ -328,7 +326,6 @@ class Osman(object):
         ----------
         name: str
             name of search template
-
         Returns
         -------
         dict
@@ -351,20 +348,28 @@ class Osman(object):
             search template to upload
         name: str
             name of the search template
-
         Returns
         -------
         dict
             dictionary with response
         """
         # check if script already exists in os
-        diffs = self._os_script_check(source, name)
+        script_os_res = self.client.get_script(id=name, ignore=[400, 404])
+
+        # if script ecists in os, compare it with the local script
+        if script_os_res["found"]:
+
+            diffs = _compare_scripts(
+                json.dumps(source), script_os_res["script"]
+            )
+        else:
+            diffs = source
 
         if diffs is None:
             return {"acknowledged": False}
 
         # upload script
-        return self.client.put_script(
+        res = self.client.put_script(
             id=name,
             body={
                 "script": {
@@ -374,34 +379,7 @@ class Osman(object):
             },
         )
 
-    def _os_script_check(self, source: dict, name: str):
-        """
-        Compare script in OS with local file.
-
-        Parameters
-        ----------
-        source: dict
-            script in json format
-        name: str
-            name of script
-
-        Returns
-        ------
-        dict
-            dictionary containing the differences between the two scripts
-        """
-        # check if script already exists in os
-        script_os_res = self.client.get_script(id=name, ignore=[400, 404])
-
-        # if script ecists in os, compare it with the local script
-        if script_os_res["found"]:
-
-            script_os = script_os_res["script"]
-            if "source" in script_os:
-                script_os = script_os.get("source")
-
-            diffs = _compare_scripts(json.dumps(source), script_os)
-        else:
-            diffs = source
-
-        return diffs
+        if diffs:
+            res["differences"] = diffs
+        logging.info("Template updated!")
+        return res
