@@ -318,14 +318,14 @@ class Osman(object):
         logging.info("Template updated!")
         return res
 
-    def delete_search_template(self, name: str) -> dict:
+    def delete_script(self, name: str) -> dict:
         """
-        Delete search template.
+        Delete search template or painless script.
 
         Parameters
         ----------
         name: str
-            name of search template
+            name of search template or painless script.
         Returns
         -------
         dict

@@ -338,7 +338,7 @@ class TestTemplates(object):
             source, config["name"], index_name, config["params"]
         )
 
-        res = os_man.delete_search_template(template_name)
+        res = os_man.delete_script(template_name)
 
         assert res
         assert res["acknowledged"] is expected_ack
@@ -556,4 +556,4 @@ class TestPainlessScripts(object):
         assert res["acknowledged"]
 
         # delete script so it doesnt linger around
-        os_man.client.delete_script(script_name)
+        os_man.delete_script(script_name)
