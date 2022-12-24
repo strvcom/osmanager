@@ -68,6 +68,11 @@ ignore =
     WPS407
     # too many methods in class
     WPS214
+<<<<<<< HEAD
+=======
+    # formatting of multi line string when entering painless script
+    WPS462
+>>>>>>> feat/painless-script-upload
 
 exclude =
     .venv
@@ -76,6 +81,7 @@ exclude =
 inline_quotes = double
 max_line_length = 79
 max_local_variables = 10
+max_string_usages = 10
 show_source = true
 extended_default_ignore = []
 max_imports = 20
