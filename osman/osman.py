@@ -59,7 +59,7 @@ def _compare_scripts(script_local: str, script_os: str) -> dict:
         logging.info("Local script and OS script are equal.")
         return None
 
-    diff = deepdiff.DeepDiff(script_local, script_os)
+    diff = deepdiff.DeepDiff(script_os, script_local)
     logging.info("Local script and OS script are not equal.")
     return diff
 
@@ -356,11 +356,17 @@ class Osman(object):
         # check if script already exists in os
         script_os_res = self.client.get_script(id=name, ignore=[400, 404])
 
+        # create body to insert into OS
+        body = {
+            "lang": "painless",
+            "source": source,
+        }
+
         # if script ecists in os, compare it with the local script
         if script_os_res["found"]:
 
             diffs = _compare_scripts(
-                json.dumps(source), script_os_res["script"]
+                json.dumps(body), json.dumps(script_os_res["script"])
             )
         else:
             diffs = source
@@ -369,15 +375,7 @@ class Osman(object):
             return {"acknowledged": False}
 
         # upload script
-        res = self.client.put_script(
-            id=name,
-            body={
-                "script": {
-                    "lang": "painless",
-                    "source": source,
-                }
-            },
-        )
+        res = self.client.put_script(id=name, body={"script": body})
 
         if diffs:
             res["differences"] = diffs
