@@ -3,12 +3,8 @@ import json
 import logging
 import uuid
 
-from opensearchpy import (
-    OpenSearch,
-    RequestsHttpConnection,
-    exceptions,
-    helpers,
-)
+import deepdiff
+from opensearchpy import OpenSearch, RequestsHttpConnection, exceptions, helpers
 from requests_aws4auth import AWS4Auth
 
 from osman.config import OsmanConfig
@@ -28,7 +24,6 @@ def _bulk_json_data(index_name: str, documents: list, id_key: str = None):
         iterable yielding documents. TODO iterable instead of list?
     id_key: str
         key from a document used for indexing or None
-
     Yields
     ------
     dict
@@ -38,6 +33,35 @@ def _bulk_json_data(index_name: str, documents: list, id_key: str = None):
     for doc in documents:
         index_id = doc[id_key] if id_key else uuid.uuid4()
         yield {"_index": index_name, "_id": index_id, "_source": doc}
+
+
+def _compare_scripts(script_local: str, script_os: str) -> dict:
+    """
+    Compare two scripts and return the differences.
+
+    Helper method for upload_search_template.
+
+    Parameters
+    ----------
+    script_local: str
+        json string of the local script
+    script_os: str
+        json string of the script in os
+    Returns
+    ------
+    dict
+        dictionary containing the differences between the two scripts
+    """
+    script_local = json.loads(script_local)
+    script_os = json.loads(script_os)
+
+    if script_local == script_os:
+        logging.info("Local script and OS script are equal.")
+        return None
+
+    diff = deepdiff.DeepDiff(script_os, script_local)
+    logging.info("Local script and OS script are not equal.")
+    return diff
 
 
 class Osman(object):
@@ -58,7 +82,6 @@ class Osman(object):
         ----------
         config: OsmanConfig
             Configuration params (url, ...) of the OpenSearch instance
-
         Raises
         ------
         AssertionError
@@ -129,7 +152,6 @@ class Osman(object):
             The name of the index
         mapping: dict
             Index mapping
-
         Returns
         -------
         dict
@@ -145,7 +167,6 @@ class Osman(object):
         ----------
         name: str
             The name of the index
-
         Returns
         -------
         dict
@@ -161,7 +182,6 @@ class Osman(object):
         ----------
         name: str
             The name of the index
-
         Returns
         -------
         dict
@@ -179,7 +199,6 @@ class Osman(object):
             The name of the index
         search_query: dict
             Search query as dictionary {'query': {....}}
-
         Returns
         -------
         dict
@@ -209,12 +228,10 @@ class Osman(object):
         refresh: bool
             Should the shards in OS refresh automatically?
             True hurts the cluster performance
-
         Returns
         -------
         dict
             Dictionary with response
-
         Raises
         ------
         RuntimeError
@@ -244,7 +261,7 @@ class Osman(object):
         self, source: dict, name: str, index: str, params: dict
     ) -> dict:
         """
-        Upload search template.
+        Upload (or update) search template.
 
         Parameters
         ----------
@@ -256,7 +273,6 @@ class Osman(object):
             name of the index
         params: dict
             search template parameters {parameters: {validation parameters}
-
         Returns
         -------
         dict
@@ -270,6 +286,21 @@ class Osman(object):
         hits_cnt = len(result["hits"]["hits"])
 
         assert hits_cnt >= 1
+
+        # check if script already exists in os
+        script_os_res = self.client.get_script(id=name, ignore=[400, 404])
+
+        # if script ecists in os, compare it with the local script
+        if script_os_res["found"]:
+
+            diffs = _compare_scripts(
+                json.dumps(source), script_os_res["script"]["source"]
+            )
+        else:
+            diffs = source
+
+        if diffs is None:
+            return {"acknowledged": False}
 
         # upload search template
         res = self.client.put_script(
@@ -288,15 +319,14 @@ class Osman(object):
         logging.info("Template updated!")
         return res
 
-    def delete_search_template(self, name: str) -> dict:
+    def delete_script(self, name: str) -> dict:
         """
-        Delete search template.
+        Delete search template or painless script.
 
         Parameters
         ----------
         name: str
-            name of search template
-
+            name of search template or painless script.
         Returns
         -------
         dict
