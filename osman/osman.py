@@ -281,6 +281,10 @@ class Osman(object):
                 }
             },
         )
+
+        if diffs:
+            res["differences"] = diffs
+
         logging.info("Template updated!")
         return res
 
@@ -303,4 +307,48 @@ class Osman(object):
         except exceptions.NotFoundError:
             res = {"acknowledged": False}
 
+        return res
+
+    def upload_painless_script(self, source: dict, name: str) -> dict:
+        """
+        Upload (or update) painless script.
+
+        Parameters
+        ----------
+        source: dict
+            search template to upload
+        name: str
+            name of the search template
+        Returns
+        -------
+        dict
+            dictionary with response
+        """
+        # check if script already exists in os
+        script_os_res = self.client.get_script(id=name, ignore=[400, 404])
+
+        # create body to insert into OS
+        body = {
+            "lang": "painless",
+            "source": source,
+        }
+
+        # if script ecists in os, compare it with the local script
+        if script_os_res["found"]:
+
+            diffs = _compare_scripts(
+                json.dumps(body), json.dumps(script_os_res["script"])
+            )
+        else:
+            diffs = source
+
+        if diffs is None:
+            return {"acknowledged": False}
+
+        # upload script
+        res = self.client.put_script(id=name, body={"script": body})
+
+        if diffs:
+            res["differences"] = diffs
+        logging.info("Template updated!")
         return res
