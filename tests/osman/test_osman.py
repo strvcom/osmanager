@@ -1,4 +1,5 @@
 """Test Osman class initialization."""
+import json
 import logging
 import os
 from dataclasses import dataclass
@@ -27,6 +28,7 @@ INDEX_MAPPING = {
             "age": {"type": "integer"},
             "id": {"type": "integer"},
             "name": {"type": "text"},
+            "container": {"type": "integer"},
         }
     }
 }
@@ -336,7 +338,7 @@ class TestTemplates(object):
             source, config["name"], index_name, config["params"]
         )
 
-        res = os_man.delete_search_template(template_name)
+        res = os_man.delete_script(template_name)
 
         assert res
         assert res["acknowledged"] is expected_ack
@@ -359,7 +361,7 @@ class TestTemplates(object):
                     }
                 },
                 True,
-                ["[root['query']['match']]", "[root['query']['bool']]"],
+                ["[root['query']['bool']]", "[root['query']['match']]"],
             ),
         ],
     )
@@ -427,3 +429,232 @@ class TestTemplates(object):
                 str(res.get("differences", {}).get("dictionary_item_removed"))
                 == expected_differences[1]
             )
+
+
+@pytest.mark.parametrize(**INDEX_HANDLER_FIXTURE_PARAMS)
+@pytest.mark.parametrize(
+    "documents",
+    [[{"id": 1, "container": [1, 2, 3]}]],
+)
+class TestPainlessScripts(object):
+    @pytest.mark.parametrize(
+        "source , params, context_type, expected",
+        [
+            (
+                """
+            int multiplier = params.multiplier;
+            int total = 0;
+            for (int i = 0; i < doc['container'].length; ++i) {
+                total += doc['container'][i] * multiplier;
+            }
+            return total;
+            """,
+                {"params": {"multiplier": 2}},
+                "score",
+                12,
+            ),
+            (
+                """
+            int multiplier = params.multiplier;
+            int total = 0;
+            for (int i = 0; i < doc['container'].length; ++i) {
+                total += doc['container'][i] * multiplier;
+            }
+            if (total > 7) {
+                return true;
+            } else {
+                return false;
+            }
+            """,
+                {"params": {"multiplier": 1}},
+                "filter",
+                0,
+            ),
+            (
+                """
+            int multiplier = params.multiplier;
+            int total = 0;
+            for (int i = 0; i < doc['container'].length; ++i) {
+                total += doc['container'][i] * multiplier;
+            }
+            if (total > 7) {
+                return true;
+            } else {
+                return false;
+            }
+            """,
+                {"params": {"multiplier": 3}},
+                "filter",
+                1,
+            ),
+        ],
+    )
+    def test_painless_script_upload(
+        self,
+        index_handler,
+        documents: list,
+        source: dict,
+        params: dict,
+        context_type: str,
+        expected: int,
+    ):
+        """
+        Test uploading search template.
+
+        Parameters
+        ----------
+        index_handler
+            index_handler fixture, returning the name of the index for testing
+        documents: list
+            list of documents [{document}, {document}, ...]
+        source: dict
+            search template to upload
+        params: dict
+            parameters to pass to painless script
+        context_type: str
+            context type of the painless script, should be in {'filter', 'score'}
+        expected: int
+            expected return from painless script
+        """
+        os_man = OS_MAN
+        index_name = index_handler
+
+        script_name = "test_script"
+
+        # create a json to test painless functionality
+        body_painless_test = json.dumps(
+            {
+                "script": {"source": source, "params": params["params"]},
+                "context": context_type,
+                "context_setup": {
+                    "index": index_name,
+                    "document": documents[0],
+                },
+            }
+        )
+
+        # send API request to test validity of painless script
+        res_painless = os_man.client.scripts_painless_execute(
+            body=body_painless_test
+        )
+
+        logging.info(res_painless["result"])
+
+        assert res_painless["result"] == expected
+
+        # Put refresh to True for immediate results
+        os_man.add_data_to_index(
+            index_name=index_name,
+            documents=documents,
+            id_key="id",
+            refresh=True,
+        )
+
+        res = os_man.upload_painless_script(source, script_name)
+
+        assert res
+        assert res["acknowledged"]
+
+        # delete script so it doesnt linger around
+        os_man.delete_script(script_name)
+
+    @pytest.mark.parametrize(
+        "source, local_source, expected_ack",
+        [
+            (
+                """
+            int multiplier = 1;
+            int total = 0;
+            for (int i = 0; i < doc['container'].length; ++i) {
+                total += doc['container'][i] * multiplier;
+            }
+            return total;
+            """,
+                """
+            int multiplier = 2;
+            int total = 0;
+            for (int i = 0; i < doc['container'].length; ++i) {
+                total += doc['container'][i] * multiplier;
+            }
+            return total;
+            """,
+                True,
+            ),
+            (
+                """
+            int multiplier = 1;
+            int total = 0;
+            for (int i = 0; i < doc['container'].length; ++i) {
+                total += doc['container'][i] * multiplier;
+            }
+            return total;
+            """,
+                """
+            int multiplier = 1;
+            int total = 0;
+            for (int i = 0; i < doc['container'].length; ++i) {
+                total += doc['container'][i] * multiplier;
+            }
+            return total;
+            """,
+                False,
+            ),
+        ],
+    )
+    def test_painless_script_comparison(
+        self,
+        index_handler,
+        documents: list,
+        source: dict,
+        local_source: dict,
+        expected_ack: bool,
+    ):
+        """
+        Test update of painless script (comparison local vs os).
+
+        Parameters
+        ----------
+        index_handler
+            index_handler fixture, returning the name of the index for testing
+        documents: list
+            list of documents [{document}, {document}, ...]
+        source: dict
+            source to upload
+        local_source: dict
+            second source to update 'source' with
+        expected_ack: bool
+            expected response when updating 'source'
+        """
+        os_man = OS_MAN
+        index_name = index_handler
+
+        script_name = "test_script"
+
+        # put refresh to True for immediate results
+        os_man.add_data_to_index(
+            index_name=index_name,
+            documents=documents,
+            id_key="id",
+            refresh=True,
+        )
+
+        res = os_man.upload_painless_script(source, script_name)
+
+        # assert that source is now in OS
+        assert res["differences"] == source
+
+        res = os_man.upload_painless_script(local_source, script_name)
+
+        # asser that source was correctly replace by local_source
+        assert res["acknowledged"] == expected_ack
+
+        # delete script so it doesnt linger around
+        os_man.delete_script(script_name)
+
+        # when differences are present, test if correct
+        if "differences" in res:
+            updated_source = res.get("differences")["values_changed"][
+                "root['source']"
+            ]["new_value"]
+
+            assert updated_source == local_source
