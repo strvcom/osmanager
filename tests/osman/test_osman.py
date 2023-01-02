@@ -630,7 +630,7 @@ class TestPainlessScripts(object):
 
         script_name = "test_script"
 
-        # Put refresh to True for immediate results
+        # put refresh to True for immediate results
         os_man.add_data_to_index(
             index_name=index_name,
             documents=documents,

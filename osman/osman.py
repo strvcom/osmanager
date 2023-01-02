@@ -290,7 +290,7 @@ class Osman(object):
         # check if script already exists in os
         script_os_res = self.client.get_script(id=name, ignore=[400, 404])
 
-        # if script ecists in os, compare it with the local script
+        # if script exists in os, compare it with the local script
         if script_os_res["found"]:
 
             diffs = _compare_scripts(
@@ -364,7 +364,6 @@ class Osman(object):
 
         # if script ecists in os, compare it with the local script
         if script_os_res["found"]:
-
             diffs = _compare_scripts(
                 json.dumps(body), json.dumps(script_os_res["script"])
             )
