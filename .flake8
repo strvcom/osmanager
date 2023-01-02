@@ -68,14 +68,17 @@ ignore =
     WPS407
     # too many methods in class
     WPS214
-    # too many local variables
-    WPS210
+    # formatting of multi line string when entering painless script
+    WPS462
+
 exclude =
     .venv
     venv
     *.md
 inline_quotes = double
 max_line_length = 79
+max_local_variables = 10
+max_string_usages = 10
 show_source = true
 extended_default_ignore = []
 max_imports = 20
