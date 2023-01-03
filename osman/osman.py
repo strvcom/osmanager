@@ -35,6 +35,7 @@ def _bulk_json_data(index_name: str, documents: list, id_key: str = None):
         index_id = doc[id_key] if id_key else uuid.uuid4()
         yield {"_index": index_name, "_id": index_id, "_source": doc}
 
+
 def _compare_scripts(script_local: str, script_os: str) -> dict:
     """
     Compare two scripts and return the differences.
@@ -59,36 +60,6 @@ def _compare_scripts(script_local: str, script_os: str) -> dict:
         return None
 
     diff = deepdiff.DeepDiff(script_os, script_local)
-    logging.info("Local script and OS script are not equal.")
-    return diff
-
-def _compare_scripts(script_local: str, script_os: str) -> dict:
-    """
-    Compare two scripts and return the differences.
-
-    Helper method for upload_search_template.
-
-    Parameters
-    ----------
-    script_local: str
-        json string of the local script
-    script_os: str
-        json string of the script in os
-
-    Returns
-    ------
-    dict
-        dictionary containing the differences between the two scripts
-
-    """
-    script_local = json.loads(script_local)
-    script_os = json.loads(script_os)
-
-    if script_local == script_os:
-        logging.info("Local script and OS script are equal.")
-        return None
-
-    diff = deepdiff.DeepDiff(script_local, script_os)
     logging.info("Local script and OS script are not equal.")
     return diff
 
@@ -487,4 +458,47 @@ class Osman(object):
         except exceptions.NotFoundError:
             res = {"acknowledged": False}
 
+        return res
+
+    def upload_painless_script(self, source: dict, name: str) -> dict:
+        """
+        Upload (or update) painless script.
+
+        Parameters
+        ----------
+        source: dict
+            search template to upload
+        name: str
+            name of the search template
+        Returns
+        -------
+        dict
+            dictionary with response
+        """
+        # check if script already exists in os
+        script_os_res = self.client.get_script(id=name, ignore=[400, 404])
+
+        # create body to insert into OS
+        body = {
+            "lang": "painless",
+            "source": source,
+        }
+
+        # if script ecists in os, compare it with the local script
+        if script_os_res["found"]:
+            diffs = _compare_scripts(
+                json.dumps(body), json.dumps(script_os_res["script"])
+            )
+        else:
+            diffs = source
+
+        if diffs is None:
+            return {"acknowledged": False}
+
+        # upload script
+        res = self.client.put_script(id=name, body={"script": body})
+
+        if diffs:
+            res["differences"] = diffs
+        logging.info("Template updated!")
         return res

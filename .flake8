@@ -70,6 +70,8 @@ ignore =
     WPS214
     # formatting of multi line string when entering painless script
     WPS462
+    # overused expression
+    WPS204
 
 exclude =
     .venv
