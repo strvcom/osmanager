@@ -24,7 +24,6 @@ def _bulk_json_data(index_name: str, documents: list, id_key: str = None):
         iterable yielding documents. TODO iterable instead of list?
     id_key: str
         key from a document used for indexing or None
-
     Yields
     ------
     dict
@@ -82,7 +81,6 @@ class Osman(object):
         ----------
         config: OsmanConfig
             Configuration params (url, ...) of the OpenSearch instance
-
         Raises
         ------
         AssertionError
@@ -188,7 +186,6 @@ class Osman(object):
         ----------
         name: str
             The name of the index
-
         Returns
         -------
         dict
@@ -204,7 +201,6 @@ class Osman(object):
         ----------
         name: str
             The name of the index
-
         Returns
         -------
         dict
@@ -318,7 +314,6 @@ class Osman(object):
             The name of the index
         search_query: dict
             Search query as dictionary {'query': {....}}
-
         Returns
         -------
         dict
@@ -348,12 +343,10 @@ class Osman(object):
         refresh: bool
             Should the shards in OS refresh automatically?
             True hurts the cluster performance
-
         Returns
         -------
         dict
             Dictionary with response
-
         Raises
         ------
         RuntimeError
@@ -395,7 +388,6 @@ class Osman(object):
             name of the index
         params: dict
             search template parameters {parameters: {validation parameters}
-
         Returns
         -------
         dict
@@ -413,15 +405,17 @@ class Osman(object):
         # check if script already exists in os
         script_os_res = self.client.get_script(id=name, ignore=[400, 404])
 
-        # if script ecists in os, compare it with the local script
+        # if script exists in os, compare it with the local script
         if script_os_res["found"]:
+
             diffs = _compare_scripts(
                 json.dumps(source), script_os_res["script"]["source"]
             )
-            if diffs is None:
-                return {"acknowledged": False}
         else:
-            diffs = None
+            diffs = source
+
+        if diffs is None:
+            return {"acknowledged": False}
 
         # upload search template
         res = self.client.put_script(

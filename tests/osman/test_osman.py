@@ -774,6 +774,8 @@ class TestPainlessScripts(object):
             body=body_painless_test
         )
 
+        logging.info(res_painless["result"])
+
         assert res_painless["result"] == expected
 
         # Put refresh to True for immediate results
