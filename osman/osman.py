@@ -217,7 +217,7 @@ class Osman(object):
         """
         Reindex with a new index mapping.
 
-        When reindexing a suffix [1, 2] is added to the index name.
+        When reindexing, a suffix [1, 2] is added to the index name.
         An index should always be referenced by its name without the suffix
         (alias).
 
@@ -236,12 +236,12 @@ class Osman(object):
             Dictionary with response
         """
         if not mapping and not settings:
-            logging.info("Mapping and settings cannot be both empty")
+            logging.warning("Mapping and settings cannot both be empty")
             return {"acknowledged": False}
 
         # only reindex when the index already exists
         if self.index_exists(name) is False:
-            logging.info("The index does not exist")
+            logging.warning("The index does not exist")
             return {"acknowledged": False}
 
         # reindexing requires suffix alternation
@@ -251,6 +251,9 @@ class Osman(object):
         diffs = _compare_scripts(json.dumps(mapping), json.dumps(os_mapping))
 
         if diffs is None:
+            logging.warning(
+                "No difference betweeen OS and local source. Terminating reindexing.."
+            )
             return {"acknowledged": False}
 
         # check which version is currently in OS (1 or 2)
@@ -279,7 +282,11 @@ class Osman(object):
 
         except exceptions.RequestError:
             self.delete_index(name=index_to_create)
-            return {"acknowledged": False, "bla": index_to_create}
+            return {
+                "acknowledged": False,
+                "name": index_to_create,
+                "alias": name,
+            }
 
         # delete the old index
         self.delete_index(name=index_to_delete)
@@ -292,9 +299,11 @@ class Osman(object):
         self.client.indices.put_alias(index_to_create, name)
 
         # extract new settings
-        os_settings = self.client.indices.get_settings(name)[index_to_create][
-            "settings"
-        ]
+        os_settings = (
+            self.client.indices.get_settings(name)
+            .get(index_to_create, {})
+            .get("settings")
+        )
 
         return {
             "acknowledged": True,
