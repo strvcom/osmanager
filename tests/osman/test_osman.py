@@ -644,7 +644,7 @@ class TestReindexing(object):
         os_man = OS_MAN
         index_name = index_handler
 
-        # Put refresh to True for immediate results
+        # put refresh to True for immediate results
         os_man.add_data_to_index(
             index_name=index_name,
             documents=documents,
@@ -778,7 +778,7 @@ class TestPainlessScripts(object):
 
         assert res_painless["result"] == expected
 
-        # Put refresh to True for immediate results
+        # put refresh to True for immediate results
         os_man.add_data_to_index(
             index_name=index_name,
             documents=documents,
@@ -881,7 +881,7 @@ class TestPainlessScripts(object):
 
         res = os_man.upload_painless_script(local_source, script_name)
 
-        # asser that source was correctly replace by local_source
+        # assert that source was correctly replaced by local_source
         assert res["acknowledged"] == expected_ack
 
         # delete script so it doesnt linger around
