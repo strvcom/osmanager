@@ -40,7 +40,6 @@ def _compare_scripts(script_local: str, script_os: str) -> dict:
     Compare two scripts and return the differences.
 
     Helper method for upload_search_template.
-
     Parameters
     ----------
     script_local: str
@@ -142,7 +141,12 @@ class Osman(object):
             logging.error("Getting cluster settings failed")
             raise
 
-    def create_index(self, name: str, mapping: dict = None) -> dict:
+    def create_index(
+        self,
+        name: str,
+        mapping: dict = None,
+        settings: dict = None,
+    ) -> dict:
         """
         Create an index.
 
@@ -152,12 +156,27 @@ class Osman(object):
             The name of the index
         mapping: dict
             Index mapping
+        settings: dict
+            Index settings
+
         Returns
         -------
         dict
             Dictionary with response
         """
-        return self.client.indices.create(index=name, body=mapping)
+        if mapping is None:
+            mapping = {"mappings": {}}
+        if settings is None:
+            settings = {"settings": {}}
+
+        body = {
+            "settings": settings["settings"],
+            "mappings": mapping["mappings"],
+        }
+
+        return self.client.indices.create(
+            index=name, body=body, ignore=[400, 404]
+        )
 
     def delete_index(self, name: str) -> dict:
         """
@@ -172,7 +191,7 @@ class Osman(object):
         dict
             Dictionary with response
         """
-        return self.client.indices.delete(index=name)
+        return self.client.indices.delete(index=name, ignore=[400, 404])
 
     def index_exists(self, name: str) -> dict:
         """
@@ -188,6 +207,111 @@ class Osman(object):
             Dictionary with response
         """
         return self.client.indices.exists(index=name)
+
+    def reindex(
+        self,
+        name: str,
+        mapping: dict = None,
+        settings: dict = None,
+    ) -> dict:
+        """
+        Reindex with a new index mapping.
+
+        When reindexing, a suffix [1, 2] is added to the index name.
+        An index should always be referenced by its name without the suffix
+        (alias).
+
+        Parameters
+        ----------
+        name: str
+            the name of the index
+        mapping: dict
+            index mapping
+        settings: dict
+            index settings
+
+        Returns
+        -------
+        dict
+            Dictionary with response
+        """
+        if not mapping and not settings:
+            logging.warning("Mapping and settings cannot both be empty")
+            return {"acknowledged": False}
+
+        # only reindex when the index already exists
+        if self.index_exists(name) is False:
+            logging.warning("The index does not exist")
+            return {"acknowledged": False}
+
+        # reindexing requires suffix alternation
+        suffix_to_create, suffix_to_delete = 1, 2
+
+        os_mapping = self.client.indices.get_mapping(name).get(name)
+        diffs = _compare_scripts(json.dumps(mapping), json.dumps(os_mapping))
+
+        if diffs is None:
+            logging.warning(
+                "No difference betweeen OS and local source. Terminating reindexing.."
+            )
+            return {"acknowledged": False}
+
+        # check which version is currently in OS (1 or 2)
+        if self.index_exists(name=f"{name}-{suffix_to_create}"):
+            suffix_to_delete, suffix_to_create = (
+                suffix_to_create,
+                suffix_to_delete,
+            )
+
+        index_to_create = f"{name}-{suffix_to_create}"
+        index_to_delete = f"{name}-{suffix_to_delete}"
+
+        # create the new index
+        self.create_index(
+            name=index_to_create, mapping=mapping, settings=settings
+        )
+
+        # move all the documents from the old index to the new index
+        # if it fails, ensure to delete the newly created index and
+        # stick to the old one
+        try:
+            self.client.reindex(
+                {"source": {"index": name}, "dest": {"index": index_to_create}},
+                wait_for_completion=True,
+            )
+
+        except exceptions.RequestError:
+            self.delete_index(name=index_to_create)
+            return {
+                "acknowledged": False,
+                "name": index_to_create,
+                "alias": name,
+            }
+
+        # delete the old index
+        self.delete_index(name=index_to_delete)
+
+        # delete if index without suffix exists
+        if self.index_exists(name=f"{name}"):
+            self.delete_index(name=f"{name}")
+
+        # create alias so we can call the index without the suffix
+        self.client.indices.put_alias(index_to_create, name)
+
+        # extract new settings
+        os_settings = (
+            self.client.indices.get_settings(name)
+            .get(index_to_create, {})
+            .get("settings")
+        )
+
+        return {
+            "acknowledged": True,
+            "name": index_to_create,
+            "alias": name,
+            "mapping_differences": diffs,
+            "settings": os_settings,
+        }
 
     def search_index(self, name: str, search_query: dict) -> dict:
         """
@@ -320,12 +444,13 @@ class Osman(object):
 
     def delete_script(self, name: str) -> dict:
         """
-        Delete search template or painless script.
+        Delete script.
 
         Parameters
         ----------
         name: str
-            name of search template or painless script.
+            name of script
+
         Returns
         -------
         dict

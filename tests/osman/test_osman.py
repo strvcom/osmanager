@@ -3,6 +3,7 @@ import json
 import logging
 import os
 from dataclasses import dataclass
+from typing import Union
 
 import pytest
 from parameterized import parameterized
@@ -286,11 +287,11 @@ class TestTemplates(object):
             source, config["name"], index_name, config["params"]
         )
 
+        # delete script
+        os_man.delete_script(config["name"])
+
         assert res
         assert res["acknowledged"]
-
-        # delete script so it doesnt linger around
-        os_man.client.delete_script(config["name"])
 
     @pytest.mark.parametrize(
         "template_name, expected_ack",
@@ -434,6 +435,241 @@ class TestTemplates(object):
 @pytest.mark.parametrize(**INDEX_HANDLER_FIXTURE_PARAMS)
 @pytest.mark.parametrize(
     "documents",
+    [
+        [
+            {"age": 10, "id": 123, "name": "james"},
+            {"age": 23, "id": 456, "name": "lordos"},
+            {"age": 45, "id": 49, "name": "fred"},
+            {"age": 10, "id": 10, "name": "carlos"},
+        ],
+    ],
+)
+class TestReindexing(object):
+    @pytest.mark.parametrize(
+        "new_index_mapping, expected_ack, expected_differences",
+        [
+            (
+                {
+                    "mappings": {
+                        "properties": {
+                            "age": {"type": "integer"},
+                            "id": {"type": "integer"},
+                            "name": {"type": "text"},
+                            "container": {"type": "integer"},
+                        }
+                    }
+                },
+                False,
+                None,
+            ),
+            (None, False, None),
+            (
+                {
+                    "mappings": {
+                        "properties": {
+                            "age": {"type": "text"},
+                            "id": {"type": "text"},
+                            "name": {"type": "text"},
+                        }
+                    }
+                },
+                True,
+                {
+                    "values_changed": {
+                        "root['mappings']['properties']['age']['type']": {
+                            "new_value": "text",
+                            "old_value": "integer",
+                        },
+                        "root['mappings']['properties']['id']['type']": {
+                            "new_value": "text",
+                            "old_value": "integer",
+                        },
+                    }
+                },
+            ),
+            (
+                {
+                    "mappings": {
+                        "properties": {
+                            "age": {"type": "float"},
+                            "id": {"type": "integer"},
+                            "name": {"type": "float"},
+                        }
+                    }
+                },
+                False,
+                None,
+            ),
+        ],
+    )
+    def test_reindexing_mapping(
+        self,
+        index_handler,
+        documents: list,
+        new_index_mapping: dict,
+        expected_ack: bool,
+        expected_differences: Union[dict, None],
+    ):
+        """
+        Test reindexing with a new index mapping.
+
+        Parameters
+        ----------
+        index_handler
+            index_handler fixture, returning the name of the index for testing
+        documents: list
+            list of documents [{document}, {document}, ...]
+        new_index_mapping: dict
+                new index mapping to replace the old one with
+        expected_ack: bool
+                expected response when reindexing
+        expected_differences: dict
+                expected differences when reindexing
+        """
+        os_man = OS_MAN
+        index_name = index_handler
+
+        # Put refresh to True for immediate results
+        os_man.add_data_to_index(
+            index_name=index_name,
+            documents=documents,
+            id_key="id",
+            refresh=True,
+        )
+
+        # reindex once
+        res1 = os_man.reindex(name=index_name, mapping=new_index_mapping)
+
+        os_mapping = os_man.client.indices.get_mapping(index_name)
+
+        assert res1["acknowledged"] is expected_ack
+
+        if res1["acknowledged"]:
+            assert os_man.index_exists(res1.get("name"))
+            assert os_man.index_exists(res1.get("alias"))
+            assert os_mapping[res1.get("name")] == new_index_mapping
+
+        if "differences" in res1:
+            assert res1.get("differences") == expected_differences
+
+        # reindex again
+        res2 = os_man.reindex(name=index_name, mapping=new_index_mapping)
+
+        if res2["acknowledged"]:
+            # verify that the old name no longer exists
+            assert os_man.index_exists(res1.get("name")) is False
+            assert os_man.index_exists(res2.get("name"))
+            assert os_man.index_exists(res2.get("alias"))
+
+            # the alias should not change
+            assert res1.get("alias") == res2.get("alias")
+
+            # the name, however, should be different
+            assert (res1.get("name") == res2.get("name")) is False
+
+    @pytest.mark.parametrize(
+        "new_index_settings, expected_ack, expected_number_of_shards, expected_analysis",
+        [
+            ({"settings": {"number_of_shards": 3}}, True, "3", None),
+            (None, False, "1", None),
+            (
+                {
+                    "settings": {
+                        "analysis": {
+                            "analyzer": {
+                                "text_query_analyzer": {
+                                    "filter": ["lowercase", "asciifolding"],
+                                    "tokenizer": "ngram_tokenizer",
+                                }
+                            },
+                            "tokenizer": {
+                                "ngram_tokenizer": {
+                                    "max_gram": 3,
+                                    "min_gram": 2,
+                                    "token_chars": ["letter", "digit"],
+                                    "type": "ngram",
+                                }
+                            },
+                        }
+                    }
+                },
+                True,
+                "1",
+                {
+                    "analyzer": {
+                        "text_query_analyzer": {
+                            "filter": ["lowercase", "asciifolding"],
+                            "tokenizer": "ngram_tokenizer",
+                        }
+                    },
+                    "tokenizer": {
+                        "ngram_tokenizer": {
+                            "token_chars": ["letter", "digit"],
+                            "min_gram": "2",
+                            "type": "ngram",
+                            "max_gram": "3",
+                        }
+                    },
+                },
+            ),
+        ],
+    )
+    def test_reindexing_settings(
+        self,
+        index_handler,
+        documents: list,
+        new_index_settings: dict,
+        expected_ack: bool,
+        expected_number_of_shards: str,
+        expected_analysis: Union[None, dict],
+    ):
+        """
+        Test reindexing with a new index settings.
+
+        Parameters
+        ----------
+        index_handler
+            index_handler fixture, returning the name of the index for testing
+        documents: list
+            list of documents [{document}, {document}, ...]
+        new_index_settings: dict
+                new index mapping to replace the old one with
+        expected_ack: bool
+                expected response when reindexing
+        expected_number_of_shards: str
+            expected number of sahrds adter reindexing
+        expected_analysis: dict
+                expected analysis settings after reindexing
+        """
+        os_man = OS_MAN
+        index_name = index_handler
+
+        # put refresh to True for immediate results
+        os_man.add_data_to_index(
+            index_name=index_name,
+            documents=documents,
+            id_key="id",
+            refresh=True,
+        )
+
+        # reindex once
+        res = os_man.reindex(name=index_name, settings=new_index_settings)
+
+        assert res["acknowledged"] == expected_ack
+
+        if res["acknowledged"]:
+            new_index_name = res["name"]
+
+            os_settings = os_man.client.indices.get_settings(index_name)[
+                new_index_name
+            ]["settings"]["index"]
+            assert os_settings["number_of_shards"] == expected_number_of_shards
+            assert os_settings.get("analysis") == expected_analysis
+
+
+@pytest.mark.parametrize(**INDEX_HANDLER_FIXTURE_PARAMS)
+@pytest.mark.parametrize(
+    "documents",
     [[{"id": 1, "container": [1, 2, 3]}]],
 )
 class TestPainlessScripts(object):
@@ -499,7 +735,7 @@ class TestPainlessScripts(object):
         expected: int,
     ):
         """
-        Test uploading search template.
+        Test uploading painless script.
 
         Parameters
         ----------
@@ -542,7 +778,7 @@ class TestPainlessScripts(object):
 
         assert res_painless["result"] == expected
 
-        # Put refresh to True for immediate results
+        # put refresh to True for immediate results
         os_man.add_data_to_index(
             index_name=index_name,
             documents=documents,
@@ -645,7 +881,7 @@ class TestPainlessScripts(object):
 
         res = os_man.upload_painless_script(local_source, script_name)
 
-        # asser that source was correctly replace by local_source
+        # assert that source was correctly replaced by local_source
         assert res["acknowledged"] == expected_ack
 
         # delete script so it doesnt linger around
