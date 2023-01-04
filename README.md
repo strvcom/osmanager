@@ -15,6 +15,7 @@ work with OpenSearch.
     - [Versioning](#versioning)
     - [Contributers](#contributors)
 - [Specs](#specs)
+- [Usage](#usage)
 
 ## <a name="installation">:computer: Installation</a>
 
@@ -117,6 +118,7 @@ For running linters from GitHub actions locally, you need to do the following.
 
 #### Requirements
 
+
 ##### Library
 
 The goal is to extend [opensearch-py library](https://pypi.org/project/opensearch-py/) features that we found useful.
@@ -152,3 +154,86 @@ The goal is to allow teams manage opensearch instances easily with templated pro
 #### Tasks
 
 Tasks are kept in github project [Osman](https://github.com/orgs/strvcom/projects/14/views/2)
+
+## <a name="usage">:hammer: Usage</a>
+
+**Create an os-man instance**
+```
+from osman import Osman, OsmanConfig
+
+os_man = Osman(OsmanConfig(host_url=<OpenSearch_host_url>))
+```
+
+**Create an index**
+```
+mappings = {
+  "mappings": {
+    "properties": {
+      "age": {"type": "integer"},
+      "id": {"type": "integer"},
+      "name": {"type": "text"},
+    }
+  }
+}
+
+settings = {
+  "settings": {
+    "number_of_shards": 3
+  }
+}
+
+os_man.create_index(
+  name=<index_name>, mapping=mapping, settings=settings
+)
+```
+
+
+**Upload a search template**
+```
+source = {
+  "query": {
+    "match": {
+      "age": "{{age}}"
+    }
+  }
+}
+
+params = {
+  "age": 10
+}
+
+os_man.upload_search_template(
+            source=sourxe, name=<template_name>, index=<index_name>, params=params
+        )
+```
+
+**Upload a painless script**
+```
+source = "doc['first.keyword'].value + ' ' + doc['last.keyword'].value"
+
+os_man.upload_painless_script(source=source, name=<script_name>)
+```
+
+**Delete a search template or a painless script**
+
+Removes either a painless script or a search template.
+
+```
+os_man.delete_script(name=<script_or_template_name>)
+```
+
+**Reindex**
+
+Reindex an existing index with a new mapping and/or settings. 
+In order to reindex, this function adds a suffix [1, 2] to the index name. 
+Afterwards, the index should be referenced by its alias rather than its name.
+
+For example:
+
+An index with the name *test-index* is reindexed. Its name becomes *test-index-1*.  When reindexed again, its name will become *test-index-2*. Hence, it should be referenced by its unchanging alias *test-index*.
+
+```
+os_man.reindex(
+  name=<index_name>, mapping=<new_mapping>, settings=<new_settings>
+)
+```
