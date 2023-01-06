@@ -33,7 +33,7 @@ from osman import Osman, OsmanConfig
 os_man = Osman(OsmanConfig())
 ```
 
-Environment variables can be overridden. 
+Environment variables can be overridden.
 
 ```
 os_man = Osman(OsmanConfig(host_url=<OpenSearch_host_url>))
