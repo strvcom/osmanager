@@ -23,7 +23,18 @@ work with OpenSearch.
 
 ## <a name="usage">:hammer: Usage</a>
 
-**Create an os-man instance**
+**Create an Osman instance**
+
+The [environment variables](#testing) are read by `OsmanConfig`.
+
+```
+from osman import Osman, OsmanConfig
+
+os_man = Osman(OsmanConfig())
+```
+
+Environment variables can be overridden. 
+
 ```
 from osman import Osman, OsmanConfig
 
@@ -32,7 +43,7 @@ os_man = Osman(OsmanConfig(host_url=<OpenSearch_host_url>))
 
 **Create an index**
 ```
-mappings = {
+mapping = {
   "mappings": {
     "properties": {
       "age": {"type": "integer"},
@@ -68,7 +79,7 @@ params = {
 }
 
 os_man.upload_search_template(
-            source=sourxe, name=<template_name>, index=<index_name>, params=params
+            source=source, name=<template_name>, index=<index_name>, params=params
 )
 ```
 
