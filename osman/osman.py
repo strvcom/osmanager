@@ -442,6 +442,54 @@ class Osman(object):
         logging.info("Template updated!")
         return res
 
+    def debug_search_template(
+        self,
+        source: dict,
+        index: str,
+        params: dict,
+        expected_ids: list = None,
+    ) -> list:
+        """
+        Debug a search template before uploading.
+
+        Verifies that returned id's are the same as expected.
+
+        Parameters
+        ----------
+        source: dict
+            search template to test
+        index: str
+            name of the index
+        params: dict
+            search template parameters {parameters: {validation parameters}
+        expected_ids: list
+            expected ids to be returned by search template
+            optional because this check is not useful when data is large
+
+        Returns
+        -------
+        list
+            ids as a result from testing of search template
+        """
+        query = json.dumps({"source": source, "params": params})
+
+        # run search template against the test data
+        results = self.client.search_template(body=query, index=index)
+
+        hits = results["hits"]["hits"]
+
+        hits_cnt = len(hits)
+
+        assert hits_cnt >= 1
+
+        ids = [hit.get("_id") for hit in hits]
+
+        if expected_ids is not None:
+
+            assert set(ids) == set(expected_ids)
+
+        return hits
+
     def delete_script(self, name: str) -> dict:
         """
         Delete script.
