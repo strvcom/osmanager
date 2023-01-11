@@ -2,6 +2,7 @@
 import json
 import logging
 import uuid
+from typing import Union
 
 import deepdiff
 from opensearchpy import OpenSearch, RequestsHttpConnection, exceptions, helpers
@@ -442,6 +443,54 @@ class Osman(object):
         logging.info("Template updated!")
         return res
 
+    def debug_search_template(
+        self,
+        source: dict,
+        index: str,
+        params: dict,
+        expected_ids: list = None,
+    ) -> list:
+        """
+        Debug a search template before uploading.
+
+        Verifies that returned id's are the same as expected.
+
+        Parameters
+        ----------
+        source: dict
+            search template to test
+        index: str
+            name of the index
+        params: dict
+            search template parameters {parameters: {validation parameters}
+        expected_ids: list
+            expected ids to be returned by search template
+            optional because this check is not useful when data is large
+
+        Returns
+        -------
+        list
+            ids as a result from testing of search template
+        """
+        query = json.dumps({"source": source, "params": params})
+
+        # run search template against the test data
+        results = self.client.search_template(body=query, index=index)
+
+        hits = results["hits"]["hits"]
+
+        hits_cnt = len(hits)
+
+        assert hits_cnt >= 1
+
+        ids = [hit.get("_id") for hit in hits]
+
+        if expected_ids is not None:
+
+            assert set(ids) == set(expected_ids)
+
+        return hits
+
     def delete_script(self, name: str) -> dict:
         """
         Delete script.
@@ -504,4 +553,80 @@ class Osman(object):
         if diffs:
             res["differences"] = diffs
         logging.info("Template updated!")
+        return res
+
+    def debug_painless_script(
+        self,
+        source: dict,
+        index: str,
+        params: dict,
+        context_type: str,
+        document: dict,
+        expected_result: Union[int, float, bool],
+    ) -> dict:
+        """
+        Debug a painless script before uploading.
+
+        Verifies that the painless script returns what is expected.
+
+        Parameters
+        ----------
+        source: dict
+            painless script to upload
+        index: str
+            index name
+        params: dict
+            parameters to pass to painless script
+        context_type: str
+            context type of the painless script, should be in {'filter', 'score'}
+        document: dict
+            document to test the script on
+        expected_result: Union[int, float, bool]
+            expected return from painless script
+
+        Returns
+        -------
+        dict
+            dictionary with response
+        """
+        if context_type == "score":
+            if type(expected_result) not in {float, int}:
+                logging.warning(
+                    "context_type 'score' requires 'expected_result' float or int"
+                )
+                return {"acknowledged": False}
+        elif context_type == "filter":
+            if type(expected_result) != bool:
+                logging.warning(
+                    "context_type 'filter' requires 'expected_result' bool"
+                )
+                return {"acknowledged": False}
+        else:
+            logging.warning("context_type must be 'filter' or 'score'")
+            return {"acknowledged": False}
+
+        # create a json to test painless functionality
+        body = json.dumps(
+            {
+                "script": {"source": source, "params": params["params"]},
+                "context": context_type,
+                "context_setup": {
+                    "index": index,
+                    "document": document,
+                },
+            }
+        )
+
+        # send API request to test validity of painless script
+        try:
+            res = self.client.scripts_painless_execute(body=body)
+        except exceptions.RequestError:
+            logging.error("Painless script execution failed")
+            return {"acknowledged": False}
+
+        if "result" in res:
+            res["acknowledged"] = True
+
+        assert res["result"] == expected_result
+
         return res

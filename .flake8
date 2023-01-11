@@ -74,6 +74,10 @@ ignore =
     WPS204
     # excludes lines that start with dot
     WPS348
+    # use type to compare compare types
+    WPS516
+    # multiline if conditions
+    WPS337
 
 exclude =
     .venv
@@ -82,7 +86,7 @@ exclude =
 inline_quotes = double
 max_line_length = 79
 max_local_variables = 10
-max_string_usages = 10
+max_string_usages = 20
 max_expressions = 20
 show_source = true
 extended_default_ignore = []

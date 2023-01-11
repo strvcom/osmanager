@@ -431,6 +431,56 @@ class TestTemplates(object):
                 == expected_differences[1]
             )
 
+    @pytest.mark.parametrize(
+        "expected_ids",
+        [
+            None,
+            ["10", "123"],
+        ],
+    )
+    def test_template_debug(
+        self,
+        index_handler,
+        documents: list,
+        config: dict,
+        source: dict,
+        expected_ids: list,
+    ):
+        """
+        Test debugging of search template.
+
+        Parameters
+        ----------
+        index_handler
+            index_handler fixture, returning the name of the index for testing
+        documents: list
+            list of documents [{document}, {document}, ...]
+        config: dict
+            search template config {name: template_name, parameters: {validation parameters}}
+        source: dict
+            source to upload
+        expected_ids: list
+            expected ids to be returned by search template
+        """
+        os_man = OS_MAN
+        index_name = index_handler
+
+        config["index"] = index_name
+
+        # put refresh to True for immediate results
+        os_man.add_data_to_index(
+            index_name=index_name,
+            documents=documents,
+            id_key="id",
+            refresh=True,
+        )
+
+        res = os_man.debug_search_template(
+            source, index_name, config["params"], expected_ids
+        )
+
+        assert res
+
 
 @pytest.mark.parametrize(**INDEX_HANDLER_FIXTURE_PARAMS)
 @pytest.mark.parametrize(
@@ -529,7 +579,7 @@ class TestReindexing(object):
         os_man = OS_MAN
         index_name = index_handler
 
-        # Put refresh to True for immediate results
+        # put refresh to True for immediate results
         os_man.add_data_to_index(
             index_name=index_name,
             documents=documents,
@@ -674,7 +724,7 @@ class TestReindexing(object):
 )
 class TestPainlessScripts(object):
     @pytest.mark.parametrize(
-        "source , params, context_type, expected",
+        "source , params, context_type, expected_result",
         [
             (
                 """
@@ -732,7 +782,7 @@ class TestPainlessScripts(object):
         source: dict,
         params: dict,
         context_type: str,
-        expected: int,
+        expected_result: int,
     ):
         """
         Test uploading painless script.
@@ -749,7 +799,7 @@ class TestPainlessScripts(object):
             parameters to pass to painless script
         context_type: str
             context type of the painless script, should be in {'filter', 'score'}
-        expected: int
+        expected_result: int
             expected return from painless script
         """
         os_man = OS_MAN
@@ -776,7 +826,7 @@ class TestPainlessScripts(object):
 
         logging.info(res_painless["result"])
 
-        assert res_painless["result"] == expected
+        assert res_painless["result"] == expected_result
 
         # put refresh to True for immediate results
         os_man.add_data_to_index(
@@ -894,3 +944,119 @@ class TestPainlessScripts(object):
             ]["new_value"]
 
             assert updated_source == local_source
+
+    @pytest.mark.parametrize(
+        "source, params, context_type, expected_result, expected_ack",
+        [
+            (
+                """
+                int multiplier = params.multiplier;
+                int total = 0;
+                for (int i = 0; i < doc['container'].length; ++i) {
+                    total += doc['container'][i] * multiplier;
+                }
+                return total;
+                """,
+                {"params": {"multiplier": 2}},
+                "score",
+                12,
+                True,
+            ),
+            (
+                """
+                int multiplier = params.multiplier;
+                int total = 0;
+                for (int i = 0; i < doc['container'].length; ++i) {
+                    total += doc['container'][i] * multiplier;
+                }
+                if (total > 7) {
+                    return true;
+                } else {
+                    return false;
+                }
+                """,
+                {"params": {"multiplier": 1}},
+                "filter",
+                False,
+                True,
+            ),
+            (
+                """
+                int multiplier = params.multiplier;
+                int total = 0;
+                for (int i = 0; i < doc['container'].length; ++i) {
+                    total += doc['container'][i] * multiplier;
+                }
+                if (total > 7) {
+                    return true;
+                } else {
+                    return false;
+                }
+                """,
+                {"params": {"multiplier": 1}},
+                "not_correct",
+                False,
+                False,
+            ),
+            (
+                """
+                int multiplier = params.multiplier;
+                int total = 0;
+                for (int i = 0; i < doc['container'].length; ++i) {
+                    total += doc['container'][i] * multiplier;
+                }
+                if (total > 7) {
+                    return true;
+                } else {
+                    return false;
+                }
+                """,
+                {"params": {"multiplier": 1}},
+                "score",
+                False,
+                False,
+            ),
+        ],
+    )
+    def test_painless_script_debug(
+        self,
+        index_handler,
+        documents: list,
+        source: dict,
+        params: dict,
+        context_type: str,
+        expected_result: Union[str, float, bool],
+        expected_ack: bool,
+    ):
+        """
+        Test debugging of painless scripts.
+
+        Parameters
+        ----------
+        index_handler
+            index_handler fixture, returning the name of the index for testing
+        documents: list
+            list of documents [{document}, {document}, ...]
+        source: dict
+            search template to upload
+        params: dict
+            parameters to pass to painless script
+        context_type: str
+            context type of the painless script, should be in {'filter', 'score'}
+        expected_result: Union[int, float, bool]
+            expected return from painless script
+        """
+        os_man = OS_MAN
+        index_name = index_handler
+
+        res = os_man.debug_painless_script(
+            source=source,
+            index=index_name,
+            params=params,
+            context_type=context_type,
+            document=documents[0],
+            expected_result=expected_result,
+        )
+
+        assert res
+        assert res["acknowledged"] == expected_ack
