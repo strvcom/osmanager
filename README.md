@@ -96,6 +96,18 @@ Removes either a painless script or a search template.
 os_man.delete_script(name=<script_or_template_name>)
 ```
 
+**Debug a search template**
+
+Executes a certain search template against an index with defined parameters. It then checks if the expected indices are returned.
+
+```
+expected_ids = ["123", "10"]
+
+os_man.debug_search_template(
+  source=source, name=<template_name>, index=<index_name>, params=params, expected_ids=expected_ids
+)
+```
+
 **Reindex**
 
 Reindex an existing index with a new mapping and/or settings.

@@ -431,6 +431,56 @@ class TestTemplates(object):
                 == expected_differences[1]
             )
 
+    @pytest.mark.parametrize(
+        "expected_ids",
+        [
+            None,
+            ["10", "123"],
+        ],
+    )
+    def test_template_debug(
+        self,
+        index_handler,
+        documents: list,
+        config: dict,
+        source: dict,
+        expected_ids: list,
+    ):
+        """
+        Test debugging of search template.
+
+        Parameters
+        ----------
+        index_handler
+            index_handler fixture, returning the name of the index for testing
+        documents: list
+            list of documents [{document}, {document}, ...]
+        config: dict
+            search template config {name: template_name, parameters: {validation parameters}}
+        source: dict
+            source to upload
+        expected_ids: list
+            expected ids to be returned by search template
+        """
+        os_man = OS_MAN
+        index_name = index_handler
+
+        config["index"] = index_name
+
+        # put refresh to True for immediate results
+        os_man.add_data_to_index(
+            index_name=index_name,
+            documents=documents,
+            id_key="id",
+            refresh=True,
+        )
+
+        res = os_man.debug_search_template(
+            source, index_name, config["params"], expected_ids
+        )
+
+        assert res
+
 
 @pytest.mark.parametrize(**INDEX_HANDLER_FIXTURE_PARAMS)
 @pytest.mark.parametrize(
@@ -529,7 +579,7 @@ class TestReindexing(object):
         os_man = OS_MAN
         index_name = index_handler
 
-        # Put refresh to True for immediate results
+        # put refresh to True for immediate results
         os_man.add_data_to_index(
             index_name=index_name,
             documents=documents,
