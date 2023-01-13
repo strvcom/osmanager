@@ -96,6 +96,27 @@ Removes either a painless script or a search template.
 os_man.delete_script(name=<script_or_template_name>)
 ```
 
+**Debug a painless script**
+
+Executes a certain painless script with provided data and parameters. It then checks if the expected result is returned. The `context_type` must be provided and is either `score` or `filter`. This refers to the score or filter queries as is described [here](https://opensearch.org/docs/1.2/opensearch/query-dsl/bool/).
+
+```
+context_type = "score"
+
+documents = {"id": 1, "container": [1, 2, 3]}
+
+expected_result = 0
+
+os_man.debug_painless_script(
+  source=<source>,
+  index=<index_name>,
+  params=<params>,
+  context_type=context_type,
+  documents=documents,
+  expected_result=expected_result
+)
+```
+
 **Debug a search template**
 
 Executes a certain search template against an index with defined parameters. It then checks if the expected indices are returned.
