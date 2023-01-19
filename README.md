@@ -262,9 +262,7 @@ For running linters from GitHub actions locally, you need to do the following.
 This section contains a brief overview of OpenSearch. This section is by no means complete or exhaustive. However, it contains a few tips and tricks that might be useful for the development of your OpenSearch project. For more information, visit the [OpenSearch documentation](https://opensearch.org/docs/latest/index/).
 
 ### <a name="analyzers">:clipboard: Analyzers</a>
-Analyzers are used to process text fields during indexing and search time. Analyzers are composed of one or more tokenizer and zero or more token filters. The tokenizer breaks the text into individual terms and the token filters potentially remove them from the analyzed field.
-
-Fields can have more than one field type.
+Analyzers are used to process text fields during indexing and search time. Analyzers are composed of one or more tokenizer and zero or more token filters. The tokenizer breaks the text into individual terms and the token filters potentially remove them from the analyzed field. Fields can have more than one field type, so different analyzers can be utilised for different situations.
 
 This section contains a small overview of the analyzers available in OpenSearch. For analyzers in general, see [Analyzers in OpenSearch](https://opensearch.org/docs/latest/opensearch/analyzers/).
 
@@ -280,6 +278,12 @@ This section contains a small overview of the analyzers available in OpenSearch.
   - N-gram analyzers should not be used for large text fields. This is because n-grams can be very large and can consume a lot of disk space.
   - Words lose their meaning when they are broken into n-grams. For example, the word "search" is broken into "se", "ea", "ar", "rc", "ch". This means that a search for "sea" will match the word "search".
   - N-gram analyzers could be useful when adressing a "username" field. This is because usernames are of limited length and users should probably be found by just searching for the middle part of their name. For example "xSuperUser" should be found by using "sup".
+
+| Not analysed | Standard | Whitespace     | N-gram |
+| :---       |    :----:   |          :---: | ---: |
+| 123@strv-2.com   | [123, strv, 2, com]  | [123@strv-2.com]   | [1, 12, 2, 23, 3...] |
+| How's it going?   | [How, s, it, going]       | [How's, it, going?]     | [H, Ho, o, ow, w...]|
+xUser-123   | [xUser, 123]       | [xUser-123]     | [x, xu, u, us, s...]|
 
 ### <a name="field types">:card_index: Field Types</a>
 
