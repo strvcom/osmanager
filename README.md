@@ -15,6 +15,7 @@ work with OpenSearch.
     - [Local lintering](#local-lintering)
     - [Versioning](#versioning)
     - [Contributers](#contributors)
+- [OpenSearch](#opensearch)
 - [Specs](#specs)
 
 ## <a name="installation">:computer: Installation</a>
@@ -256,6 +257,47 @@ For running linters from GitHub actions locally, you need to do the following.
 - [Jaroslav Bezdek](https://www.github.com/jardabezdek)
 - [Niek Mereu](https://github.com/niekstrv)
 - [Vladimír Kadlec](https://github.com/vladimirkadlec-strv)
+
+## <a name="opensearch">:scroll: OpenSearch</a>
+This section contains a brief overview of OpenSearch. This section is by no means complete or exhaustive. However, it contains a few tips and tricks that might be useful for the development of your OpenSearch project. For more information, visit the [OpenSearch documentation](https://opensearch.org/docs/latest/index/).
+
+### <a name="analyzers">:clipboard: Analyzers</a>
+Analyzers are used to process text fields during indexing and search time. Analyzers are composed of one or more tokenizer and zero or more token filters. The tokenizer breaks the text into individual terms and the token filters potentially remove them from the analyzed field. Fields can have more than one field type, so different analyzers can be utilised for different situations.
+
+This section contains a small overview of the analyzers available in OpenSearch. For analyzers in general, see [Analyzers in OpenSearch](https://opensearch.org/docs/latest/opensearch/analyzers/).
+
+- **Standard**
+  - Standard analyzers are used to index and search for complete words. Standard analyzers are composed of a tokenizer and a token filter. The standard analyzer uses the standard tokenizer. The standard tokenizer breaks text into terms on word boundaries. The standard analyzer also uses the lowercase token filter. The lowercase token filter converts all tokens to lowercase.
+  - The standard tokenizer breaks down words on word boundaries. It breaks words down on whitespaces, as well as many special characters.
+  - The Standard analyzer might not be useful for fields like Email addresses. An email address like "123@strv-2.com" is broken down into "123", "strv", "2", "com".
+- **Whitespace**
+  - Whitespace analyzers are used to index and search for complete words. Whitespace analyzers are composed of a tokenizer and a token filter. The whitespace analyzer uses the whitespace tokenizer.
+  - Because the Whitespace analyzer does not break words on special characters, it is more suitable for data like Email addresses or URLs.
+- **N-gram**
+  - N-gram analyzers are used to index and search for partial words. N-gram analyzers are composed of a tokenizer and a token filter. The tokenizer breaks the text into individual terms and the token filter creates n-grams for each term. N-gram analyzers are used to index and search for partial words.
+  - N-gram analyzers should not be used for large text fields. This is because n-grams can be very large and can consume a lot of disk space.
+  - Words lose their meaning when they are broken into n-grams. For example, the word "search" is broken into "se", "ea", "ar", "rc", "ch". This means that a search for "sea" will match the word "search".
+  - N-gram analyzers could be useful when adressing a "username" field. This is because usernames are of limited length and users should probably be found by just searching for the middle part of their name. For example "xSuperUser" should be found by using "sup".
+
+| Not analysed | Standard | Whitespace     | N-gram |
+| :---       |    :----:   |          :---: | ---: |
+| 123@strv-2.com   | [123, strv, 2, com]  | [123@strv-2.com]   | [1, 12, 2, 23, 3...] |
+| How's it going?   | [How, s, it, going]       | [How's, it, going?]     | [H, Ho, o, ow, w...]|
+xUser-123   | [xUser, 123]       | [xUser-123]     | [x, xu, u, us, s...]|
+
+### <a name="field types">:card_index: Field Types</a>
+
+This section contains a small overview of the field types that are available in OpenSearch. For field types that are not discussed here, please refer to the [official documentation](https://opensearch.org/docs/opensearch/rest-api/create-index/).
+
+- **Keyword**
+  - Keyword fields are used to store data that is not meant to be analyzed. Keyword fields are not analyzed and support exact value searches.
+  - Keyword fields are not used for full-text search.
+  - Keyword fields are for example useful for "id" fields.
+
+- **Text**
+  - Text fields are used to store textual data, such as the body of an email or the description of a product in an e-commerce store. Text fields are analyzed and support full-text search.
+  - Text fields are used when exact value searches are not wanted.
+
 
 ## <a name="specs">:books: Specs</a>
 
