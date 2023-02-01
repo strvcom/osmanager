@@ -170,3 +170,6 @@ cython_debug/
 # Node stuff
 package-lock.json
 node_modules/
+
+# package
+dist/

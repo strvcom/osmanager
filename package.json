@@ -1,9 +1,13 @@
 {
-  "name": "strv-ds-opensearch-manager",
-  "version": "1.0.0",
-  "description": "STRV OpenSearch manager repository.",
+  "name": "osmanager",
+  "version": "1.0.2",
+  "description": "OpenSearch manager repository.",
   "author": "STRV DS Department <datascience.dept@strv.com>",
+  "email": "datascience.dept@strv.com",
+  "url": "https://github.com/strvcom/osman",
   "contributors": [
+    "Niek Mereu <niek.mereu@strv.com>",
+    "Vladimir Kadlec <vladimir.kadlec@strv.com>",
     "Jaroslav Bezdek <jaroslav.bezdek@strv.com>"
   ],
   "license": "ISC",
