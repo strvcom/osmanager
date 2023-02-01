@@ -20,26 +20,8 @@ work with OpenSearch.
 
 ## <a name="installation">:computer: Installation</a>
 
-### Local environment
-
-1. Have a valid ssh authentication key on your local machine.
-2. Add `git+ssh://git@github.com/strvcom/strv-ds-opensearch-manager.git` to `requirements.txt`.
-3. Create a venv or conda environment using `requirements.txt`.
-
-### Docker-compose
-1. Do all the 'local environment' steps above.
-2. Run docker compose with reference to the local key as an argument (e.g. `docker-compose build --build-arg SSH_PRIVATE_KEY="$(cat ~/.ssh/id_ed25519)"`)
-3. Add the following to the Dockerfile:
-```
-# Add ssh private key into container
-ARG SSH_PRIVATE_KEY
-RUN mkdir ~/.ssh/
-RUN echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_ed25519
-RUN chmod 600 ~/.ssh/id_ed25519
-RUN ssh-keyscan github.com >> ~/.ssh/known_hosts
-```
-
- **_NOTE:_**  When using Makefile use `SSH_PRIVATE_KEY="$$(cat ~/.ssh/id_ed25519)`.
+1. Create a new virtual environment.
+2. Run `pip install osmanager`.
 
 ## <a name="usage">:hammer: Usage</a>
 
@@ -247,10 +229,6 @@ For running linters from GitHub actions locally, you need to do the following.
 
 1. Install [`pre-commit`](https://pypi.org/project/pre-commit/) library.
 1. From root project directory, run: `pre-commit run --all-files`
-
-### <a name="versioning">:heavy_plus_sign: Versioning</a>
-
-*TODO*
 
 ### <a name="contributors">:pencil: Contributors</a>
 
