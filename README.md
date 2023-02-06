@@ -20,26 +20,8 @@ work with OpenSearch.
 
 ## <a name="installation">:computer: Installation</a>
 
-### Local environment
-
-1. Have a valid ssh authentication key on your local machine.
-2. Add `git+ssh://git@github.com/strvcom/strv-ds-opensearch-manager.git` to `requirements.txt`.
-3. Create a venv or conda environment using `requirements.txt`.
-
-### Docker-compose
-1. Do all the 'local environment' steps above.
-2. Run docker compose with reference to the local key as an argument (e.g. `docker-compose build --build-arg SSH_PRIVATE_KEY="$(cat ~/.ssh/id_ed25519)"`)
-3. Add the following to the Dockerfile:
-```
-# Add ssh private key into container
-ARG SSH_PRIVATE_KEY
-RUN mkdir ~/.ssh/
-RUN echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_ed25519
-RUN chmod 600 ~/.ssh/id_ed25519
-RUN ssh-keyscan github.com >> ~/.ssh/known_hosts
-```
-
- **_NOTE:_**  When using Makefile use `SSH_PRIVATE_KEY="$$(cat ~/.ssh/id_ed25519)`.
+1. Create a new virtual environment.
+2. Run `pip install osmanager`.
 
 ## <a name="usage">:hammer: Usage</a>
 
@@ -249,8 +231,32 @@ For running linters from GitHub actions locally, you need to do the following.
 1. From root project directory, run: `pre-commit run --all-files`
 
 ### <a name="versioning">:heavy_plus_sign: Versioning</a>
+For information on semantic versioning, see [semver.org](https://semver.org/).
 
-*TODO*
+Given a version number MAJOR.MINOR.PATCH, increment the:
+
+- MAJOR version when you make incompatible API changes
+- MINOR version when you add functionality in a backwards compatible manner
+- PATCH version when you make backwards compatible bug fixes
+
+When incrementing the MAJOR version, reset the MINOR and PATCH versions to 0.
+When incrementing the MINOR version, reset the PATCH version to 0.
+
+When a version is released, a tag should be created in the format `vMAJOR.MINOR.PATCH`.
+
+Follow the steps below to create a new release:
+1. Update `package.json` with the new version number.
+2. Add the tag to the current branch like this:
+
+```
+git tag -a v1.0.0 -m "Release version 1.0.0"
+```
+3. Push the tag to the remote repository:
+
+```
+git push origin --tags
+```
+4. Create a new pull request with the new version number and merge it to the `master` branch.
 
 ### <a name="contributors">:pencil: Contributors</a>
 
