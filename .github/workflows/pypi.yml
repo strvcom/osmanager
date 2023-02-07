@@ -9,7 +9,10 @@ jobs:
     name: Build and publish Python 🐍 distributions 📦 to PyPI and TestPyPI
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@chore/automatic-releasing
+    - name: Checkout
+      uses: actions/checkout@master
+      with:
+        ref: 'chore/automatic-releasing'
     - name: Set up Python 3.10
       uses: actions/setup-python@v3
       with:
