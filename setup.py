@@ -14,7 +14,7 @@ package_info = json.loads(package_info)
 
 setup(
     name=package_info["name"],
-    version=package_info["version"],
+    version="{{VERSION_PLACEHOLDER}}",
     author=package_info["author"],
     author_email=package_info["email"],
     url=package_info["url"],

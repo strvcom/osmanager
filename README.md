@@ -244,19 +244,18 @@ When incrementing the MINOR version, reset the PATCH version to 0.
 
 When a version is released, a tag should be created in the format `vMAJOR.MINOR.PATCH`.
 
-Follow the steps below to create a new release:
-1. Update `package.json` with the new version number.
-2. Add the tag to the current branch like this:
+A new version is not automatically released upon merging into master. Follow the steps below to create a new release:
+
+1. Add the tag to the current branch like this:
 
 ```
 git tag -a v1.0.0 -m "Release version 1.0.0"
 ```
-3. Push the tag to the remote repository:
+2. Push the tag to the remote repository:
 
 ```
 git push origin --tags
 ```
-4. Create a new pull request with the new version number and merge it to the `master` branch.
 
 ### <a name="contributors">:pencil: Contributors</a>
 
