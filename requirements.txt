@@ -16,3 +16,4 @@ tomli==2.0.1
 urllib3==1.26.12
 requests-aws4auth==1.1.2
 deepdiff==6.2.1
+pre-commit==3.6.2
