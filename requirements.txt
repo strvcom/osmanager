@@ -17,3 +17,4 @@ urllib3
 requests-aws4auth==1.1.2
 deepdiff==6.2.1
 pre-commit==3.6.2
+importlib-metadata==4.13.0
