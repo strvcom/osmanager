@@ -48,6 +48,6 @@ setup(
         "requests-aws4auth>=1.1",
         "deepdiff>=6.2",
     ],
-    python_requires=">=3.9",
+    python_requires=">=3.10",
     include_package_data=True,
 )
