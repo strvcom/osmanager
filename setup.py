@@ -36,7 +36,7 @@ setup(
         "click>=8.1",
         "idna>=3.4",
         "iniconfig>=1.1",
-        "opensearch-py>=2.0",
+        "opensearch-py==2.6.0",
         "packaging>=21.3",
         "parameterized>=0.8.1",
         "pluggy>=1.0",

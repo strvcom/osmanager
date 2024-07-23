@@ -554,7 +554,7 @@ class Osman(object):
             res["differences"] = diffs
         logging.info("Template updated!")
         return res
-    
+
     def update_cluster_settings(self, settings: dict) -> dict:
         """
         Update cluster settings.
@@ -569,53 +569,19 @@ class Osman(object):
         -------
         dict
             Dictionary with the response from the OpenSearch cluster.
+
+        Raises
+        ------
+        RuntimeError
+            If the update fails or OpenSearch returns an error.
         """
-        try:
+        try:  # noqa: WPS229
             response = self.client.cluster.put_settings(body=settings)
             logging.info("Cluster settings updated successfully.")
             return response
         except exceptions.OpenSearchException as e:
             logging.error("Failed to update cluster settings: %s", e)
             raise RuntimeError(f"Failed to update cluster settings: {e}") from e
-    
-    def register_model_group(self, name: str, description: str, access_mode: str = "public") -> dict:
-        """
-        Register a new model group in OpenSearch.
-
-        Parameters
-        ----------
-        name : str
-            The name of the model group.
-        description : str
-            A description of the model group.
-        access_mode : str
-            Access mode of the model group, defaults to 'public'.
-
-        Returns
-        -------
-        dict
-            Dictionary containing the response from the OpenSearch server.
-        """
-        # Construct the payload for the POST request
-        payload = {
-            "name": name,
-            "description": description,
-            "access_mode": access_mode
-        }
-
-        # Define the endpoint for model group registration
-        endpoint = "/_plugins/_ml/model_groups/_register"
-
-        try:
-            # Make the POST request to register the model group
-            response = self.client.transport.perform_request('POST', endpoint, body=json.dumps(payload))
-            logging.info("Model group registered successfully.")
-            return response
-        except exceptions.OpenSearchException as e:
-            logging.error(f"Failed to register model group: {e}")
-            raise RuntimeError(f"Failed to register model group: {e}") from e
-
-
 
     def debug_painless_script(
         self,
@@ -692,7 +658,7 @@ class Osman(object):
         assert res["result"] == expected_result
 
         return res
-    
+
     def send_post_request(self, endpoint: str, payload: dict) -> dict:
         """
         Send a POST request to a specified endpoint in OpenSearch.
@@ -714,15 +680,18 @@ class Osman(object):
         RuntimeError
             If the POST request fails or OpenSearch returns an error.
         """
-        try:
-            # Make the POST request to the specified endpoint
-            response = self.client.transport.perform_request('POST', endpoint, body=json.dumps(payload))
+        try:  # noqa: WPS229
+            response = self.client.transport.perform_request(
+                "POST", endpoint, body=json.dumps(payload)
+            )
             logging.info(f"POST request to {endpoint} successful.")
             return response
         except exceptions.OpenSearchException as e:
             logging.error(f"Failed to send POST request to {endpoint}: {e}")
-            raise RuntimeError(f"Failed to send POST request to {endpoint}: {e}") from e
-        
+            raise RuntimeError(
+                f"Failed to send POST request to {endpoint}: {e}"
+            ) from e
+
     def send_get_request(self, endpoint: str) -> dict:
         """
         Send a GET request to a specified endpoint in OpenSearch.
@@ -742,15 +711,16 @@ class Osman(object):
         RuntimeError
             If the GET request fails or OpenSearch returns an error.
         """
-        try:
-            # Make the GET request to the specified endpoint
-            response = self.client.transport.perform_request('GET', endpoint)
+        try:  # noqa: WPS229
+            response = self.client.transport.perform_request("GET", endpoint)
             logging.info(f"GET request to {endpoint} successful.")
             return response
         except exceptions.OpenSearchException as e:
             logging.error(f"Failed to send GET request to {endpoint}: {e}")
-            raise RuntimeError(f"Failed to send GET request to {endpoint}: {e}") from e
-    
+            raise RuntimeError(
+                f"Failed to send GET request to {endpoint}: {e}"
+            ) from e
+
     def send_put_request(self, endpoint: str, payload: dict) -> dict:
         """
         Send a PUT request to a specified endpoint in OpenSearch.
@@ -772,16 +742,15 @@ class Osman(object):
         RuntimeError
             If the PUT request fails or OpenSearch returns an error.
         """
-        try:
-            # Serialize the payload into JSON format
+        try:  # noqa: WPS229
             json_payload = json.dumps(payload)
-            # Make the PUT request to the specified endpoint
-            response = self.client.transport.perform_request('PUT', endpoint, body=json_payload)
+            response = self.client.transport.perform_request(
+                "PUT", endpoint, body=json_payload
+            )
             logging.info(f"PUT request to {endpoint} successful.")
             return response
         except exceptions.OpenSearchException as e:
             logging.error(f"Failed to send PUT request to {endpoint}: {e}")
-            raise RuntimeError(f"Failed to send PUT request to {endpoint}: {e}") from e
-
-
-
+            raise RuntimeError(
+                f"Failed to send PUT request to {endpoint}: {e}"
+            ) from e
