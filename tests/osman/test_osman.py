@@ -421,7 +421,6 @@ class TestTemplates(object):
 
         # when differences are present, test if correct
         if "differences" in res:
-
             assert (
                 str(res.get("differences", {}).get("dictionary_item_added"))
                 == expected_differences[0]
