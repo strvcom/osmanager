@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.3.0  # Update if there's a newer version
+    rev: v4.0.1
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -11,17 +11,17 @@ repos:
       - id: debug-statements
 
   - repo: https://github.com/psf/black
-    rev: 22.6.0  # Check for newer version
+    rev: 23.1.0  
     hooks:
       - id: black
 
   - repo: https://github.com/pycqa/isort
-    rev: 5.12.0  # Check for newer version
+    rev: 5.11.5  
     hooks:
       - id: isort
 
   - repo: https://github.com/pycqa/flake8
-    rev: 4.0.1  # Update to the latest version, e.g., 5.0.4
+    rev: 5.0.4
     hooks:
       - id: flake8
         additional_dependencies:
