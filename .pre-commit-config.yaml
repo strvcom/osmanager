@@ -24,5 +24,4 @@ repos:
     rev: 5.0.4
     hooks:
       - id: flake8
-        additional_dependencies:
-          - wemake-python-styleguide==0.16.1  # Update to the latest compatible version or remove temporarily
+
