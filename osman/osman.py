@@ -616,7 +616,7 @@ class Osman(object):
             dictionary with response
         """
         if context_type == "score":
-            if not isinstance(expected_result, {float, int}):
+            if not isinstance(expected_result, (float, int)):
                 logging.warning(
                     "context_type 'score' requires 'expected_result' float or int"
                 )
