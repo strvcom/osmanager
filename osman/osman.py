@@ -417,7 +417,6 @@ class Osman(object):
 
         # if script exists in os, compare it with the local script
         if script_os_res["found"]:
-
             diffs = _compare_scripts(
                 json.dumps(source), script_os_res["script"]["source"]
             )
@@ -486,7 +485,6 @@ class Osman(object):
         ids = [hit.get("_id") for hit in hits]
 
         if expected_ids is not None:
-
             assert set(ids) == set(expected_ids)
 
         return hits
@@ -618,13 +616,13 @@ class Osman(object):
             dictionary with response
         """
         if context_type == "score":
-            if type(expected_result) not in {float, int}:
+            if not isinstance(expected_result, {float, int}):
                 logging.warning(
                     "context_type 'score' requires 'expected_result' float or int"
                 )
                 return {"acknowledged": False}
         elif context_type == "filter":
-            if type(expected_result) != bool:
+            if not isinstance(expected_result, (bool)):
                 logging.warning(
                     "context_type 'filter' requires 'expected_result' bool"
                 )
