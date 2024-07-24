@@ -417,7 +417,6 @@ class Osman(object):
 
         # if script exists in os, compare it with the local script
         if script_os_res["found"]:
-
             diffs = _compare_scripts(
                 json.dumps(source), script_os_res["script"]["source"]
             )
@@ -486,7 +485,6 @@ class Osman(object):
         ids = [hit.get("_id") for hit in hits]
 
         if expected_ids is not None:
-
             assert set(ids) == set(expected_ids)
 
         return hits
@@ -555,6 +553,34 @@ class Osman(object):
         logging.info("Template updated!")
         return res
 
+    def update_cluster_settings(self, settings: dict) -> dict:
+        """
+        Update cluster settings.
+
+        Parameters
+        ----------
+        settings: dict
+            A dictionary containing the cluster settings to update. This can include
+            'persistent' and 'transient' settings.
+
+        Returns
+        -------
+        dict
+            Dictionary with the response from the OpenSearch cluster.
+
+        Raises
+        ------
+        RuntimeError
+            If the update fails or OpenSearch returns an error.
+        """
+        try:  # noqa: WPS229
+            response = self.client.cluster.put_settings(body=settings)
+            logging.info("Cluster settings updated successfully.")
+            return response
+        except exceptions.OpenSearchException as e:
+            logging.error("Failed to update cluster settings: %s", e)
+            raise RuntimeError(f"Failed to update cluster settings: {e}") from e
+
     def debug_painless_script(
         self,
         source: dict,
@@ -590,13 +616,13 @@ class Osman(object):
             dictionary with response
         """
         if context_type == "score":
-            if type(expected_result) not in {float, int}:
+            if not isinstance(expected_result, (float, int)):
                 logging.warning(
                     "context_type 'score' requires 'expected_result' float or int"
                 )
                 return {"acknowledged": False}
         elif context_type == "filter":
-            if type(expected_result) != bool:
+            if not isinstance(expected_result, (bool)):
                 logging.warning(
                     "context_type 'filter' requires 'expected_result' bool"
                 )
@@ -630,3 +656,99 @@ class Osman(object):
         assert res["result"] == expected_result
 
         return res
+
+    def send_post_request(self, endpoint: str, payload: dict) -> dict:
+        """
+        Send a POST request to a specified endpoint in OpenSearch.
+
+        Parameters
+        ----------
+        endpoint : str
+            The API endpoint to which the POST request will be sent.
+        payload : dict
+            The payload for the POST request, structured as a dictionary.
+
+        Returns
+        -------
+        dict
+            Dictionary containing the response from the OpenSearch server.
+
+        Raises
+        ------
+        RuntimeError
+            If the POST request fails or OpenSearch returns an error.
+        """
+        try:  # noqa: WPS229
+            response = self.client.transport.perform_request(
+                "POST", endpoint, body=json.dumps(payload)
+            )
+            logging.info(f"POST request to {endpoint} successful.")
+            return response
+        except exceptions.OpenSearchException as e:
+            logging.error(f"Failed to send POST request to {endpoint}: {e}")
+            raise RuntimeError(
+                f"Failed to send POST request to {endpoint}: {e}"
+            ) from e
+
+    def send_get_request(self, endpoint: str) -> dict:
+        """
+        Send a GET request to a specified endpoint in OpenSearch.
+
+        Parameters
+        ----------
+        endpoint : str
+            The API endpoint to which the GET request will be sent.
+
+        Returns
+        -------
+        dict
+            Dictionary containing the response from the OpenSearch server.
+
+        Raises
+        ------
+        RuntimeError
+            If the GET request fails or OpenSearch returns an error.
+        """
+        try:  # noqa: WPS229
+            response = self.client.transport.perform_request("GET", endpoint)
+            logging.info(f"GET request to {endpoint} successful.")
+            return response
+        except exceptions.OpenSearchException as e:
+            logging.error(f"Failed to send GET request to {endpoint}: {e}")
+            raise RuntimeError(
+                f"Failed to send GET request to {endpoint}: {e}"
+            ) from e
+
+    def send_put_request(self, endpoint: str, payload: dict) -> dict:
+        """
+        Send a PUT request to a specified endpoint in OpenSearch.
+
+        Parameters
+        ----------
+        endpoint : str
+            The API endpoint to which the PUT request will be sent.
+        payload : dict
+            The payload for the PUT request, structured as a dictionary.
+
+        Returns
+        -------
+        dict
+            Dictionary containing the response from the OpenSearch server.
+
+        Raises
+        ------
+        RuntimeError
+            If the PUT request fails or OpenSearch returns an error.
+        """
+        try:  # noqa: WPS229
+            json_payload = json.dumps(payload)
+            response = self.client.transport.perform_request(
+                "PUT", endpoint, body=json_payload
+            )
+            logging.info(f"PUT request to {endpoint} successful.")
+            return response
+        except exceptions.OpenSearchException as e:
+            logging.error(f"Failed to send PUT request to {endpoint}: {e}")
+            raise RuntimeError(
+                f"Failed to send PUT request to {endpoint}: {e}"
+            ) from e
