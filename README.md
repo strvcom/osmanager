@@ -248,8 +248,8 @@ params = {
 }
 
 os_man.upload_search_template(
-    source=source, 
-    name="search_template_name", 
+    source=source,
+    name="search_template_name",
     index="index_name",
     params=params
 )
