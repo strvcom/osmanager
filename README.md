@@ -148,6 +148,7 @@ os_man.reindex(
 ```
 
 **Text Embeddings**
+
 For using text embeddings, ML must be enabled in the index settings. The following example shows how to enable ML in the index settings.
 
 ```
@@ -170,6 +171,17 @@ cluster_settings = {
 os_man.update_cluster_settings(cluster_settings)
 ```
 
+Create a model group:
+
+```
+POST /_plugins/_ml/model_groups/_register
+{
+  "name": "model-group",
+  "description": "A model group",
+
+}
+```
+
 To create a model, the following example shows how to create a model with the given parameters.
 
 ```
@@ -177,6 +189,7 @@ model_payload = {
     "name": "example-model",
     "version": "1.0.0",
     "model_format": "TORCH_SCRIPT"
+    "model_group_id": "model-group",
 }
 os_man.send_post_request(
     "/_plugins/_ml/models/_register",
@@ -244,7 +257,7 @@ source = {
 params = {
     "query_text": "This is a sample query",
     "model_id": "model_id",
-    "k": "number_of_results"
+    "k": "number_of_nearest_neighbors"
 }
 
 os_man.upload_search_template(
@@ -254,8 +267,6 @@ os_man.upload_search_template(
     params=params
 )
 ```
-
-
 
 ## <a name="contribution">:construction_worker_man: Contribution</a>
 
