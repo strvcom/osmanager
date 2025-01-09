@@ -147,6 +147,116 @@ os_man.reindex(
 )
 ```
 
+**Text Embeddings**
+For using text embeddings, ML must be enabled in the index settings. The following example shows how to enable ML in the index settings.
+
+```
+cluster_settings = {
+    "transient": {
+        "plugins.ml_commons.model_access_control_enabled": True,
+        "plugins.ml_commons.allow_registering_model_via_url": True,
+        "plugins.ml_commons.only_run_on_ml_node": False,
+    },
+    "persistent": {
+        "plugins": {
+            "ml_commons": {
+                "only_run_on_ml_node": "false",
+                "model_access_control_enabled": "true",
+                "native_memory_threshold": "99"
+            }
+        }
+    }
+}
+os_man.update_cluster_settings(cluster_settings)
+```
+
+To create a model, the following example shows how to create a model with the given parameters.
+
+```
+model_payload = {
+    "name": "example-model",
+    "version": "1.0.0",
+    "model_format": "TORCH_SCRIPT"
+}
+os_man.send_post_request(
+    "/_plugins/_ml/models/_register",
+    model_payload
+)
+```
+A task_id is returned after creating a model. This task_id can be used to check the status of the model.
+
+```
+task_id = "task_id"
+endpoint = f"/_plugins/_ml/tasks/{task_id}"
+
+os_man.send_get_request(endpoint)
+```
+
+To deploy a model, obtain the model_id from the response of the model creation. The following example shows how to deploy a model with the given model_id.
+
+```
+model_id = "model_id"
+endpoint = f"/_plugins/_ml/models/{model_id}/_deploy"
+payload = {}
+os_man.send_post_request(endpoint, payload)
+```
+
+To create an NLP ingest pipeline:
+
+```
+pipeline_id = "nlp-ingest-pipeline"
+endpoint = f"/_ingest/pipeline/{pipeline_id}"
+
+# Define the payload for the ingest pipeline
+pipeline_payload = {
+    "description": "An NLP ingest pipeline",
+    "processors": [
+        {
+            "text_embedding": {
+                "model_id": "model_id",
+                "field_map": {
+                    "content": "passage_embedding"
+                }
+            }
+        }
+    ]
+}
+
+os_man.send_put_request(endpoint, pipeline_payload)
+```
+
+Create a search template with text embeddings:
+
+```
+source = {
+    "size": 500,
+    "query": {
+        "neural": {
+            "passage_embedding": {
+                "query_text": "{{query_text}}",
+                "model_id": "{{model_id}}",
+                "k": "{{k}}"
+                }
+            }
+        }
+    }
+
+params = {
+    "query_text": "This is a sample query",
+    "model_id": "model_id",
+    "k": "number_of_results"
+}
+
+os_man.upload_search_template(
+    source=source,
+    name="search_template_name",
+    index="index_name",
+    params=params
+)
+```
+
+
+
 ## <a name="contribution">:construction_worker_man: Contribution</a>
 
 ### <a name="local-env-setup">:wrench: Local environment setup</a>
