@@ -113,7 +113,6 @@ class OsmanConfig(object):
         timeout: int = 10,
         max_retries: int = 1,
         retry_on_timeout: bool = False,
-
     ):
         """
         Init OsmanConfig.
@@ -149,6 +148,12 @@ class OsmanConfig(object):
         aws_region: str
             init
         aws_service: str
+            init
+        timeout: int
+            init
+        max_retries: int
+            init
+        retry_on_timeout: bool
             init
         """
         # non empty host_url takes precedence over auth_method
