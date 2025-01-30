@@ -110,6 +110,10 @@ class OsmanConfig(object):
         aws_secret_access_key: str = AWS_SECRET_ACCESS_KEY,
         aws_region: str = AWS_REGION,
         aws_service: str = AWS_SERVICE,
+        timeout: int = 10,
+        max_retries: int = 1,
+        retry_on_timeout: bool = False,
+
     ):
         """
         Init OsmanConfig.
@@ -232,6 +236,9 @@ class OsmanConfig(object):
         self.aws_secret_access_key = aws_secret_access_key
         self.aws_region = aws_region
         self.aws_service = aws_service
+        self.timeout = timeout
+        self.max_retries = max_retries
+        self.retry_on_timeout = retry_on_timeout
 
     def _reload_defaults_from_env(self):
         """

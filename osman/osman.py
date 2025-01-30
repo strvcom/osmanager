@@ -132,6 +132,9 @@ class Osman(object):
         os_params["use_ssl"] = config.opensearch_ssl_enabled
         os_params["http_compress"] = True
         os_params["connection_class"] = RequestsHttpConnection
+        os_params["timeout"] = config.timeout
+        os_params["max_retries"] = config.max_retries
+        os_params["retry_on_timeout"] = config.retry_on_timeout
         self.client = OpenSearch(**os_params)
 
         # Test the connection
