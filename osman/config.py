@@ -156,6 +156,10 @@ class OsmanConfig(object):
         retry_on_timeout: bool
             init
         """
+        self.timeout = timeout
+        self.max_retries = max_retries
+        self.retry_on_timeout = retry_on_timeout
+
         # non empty host_url takes precedence over auth_method
         if host_url:
             logging.info("Using host_url: '%s'", host_url)
@@ -241,9 +245,6 @@ class OsmanConfig(object):
         self.aws_secret_access_key = aws_secret_access_key
         self.aws_region = aws_region
         self.aws_service = aws_service
-        self.timeout = timeout
-        self.max_retries = max_retries
-        self.retry_on_timeout = retry_on_timeout
 
     def _reload_defaults_from_env(self):
         """
